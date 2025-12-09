@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoBoost: Unit 8 Mastery</title>
+    <title>GeoBoost: Unit 7 Mastery</title>
     
     <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
@@ -28,304 +28,209 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- ICONS (Inline SVGs to remove external dependencies) ---
+        // --- ICONS ---
         const Icon = ({ children, size = 20, className = "" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
                 {children}
             </svg>
         );
 
-        const BookOpen = (props) => <Icon {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></Icon>;
+        const MapPin = (props) => <Icon {...props}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></Icon>;
+        const GitCommit = (props) => <Icon {...props}><circle cx="12" cy="12" r="4"></circle><line x1="1.05" y1="12" x2="7" y2="12"></line><line x1="17.01" y1="12" x2="22.96" y2="12"></line></Icon>;
         const CheckCircle = (props) => <Icon {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></Icon>;
         const XCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></Icon>;
         const ArrowRight = (props) => <Icon {...props}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></Icon>;
         const Award = (props) => <Icon {...props}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></Icon>;
-        const Calculator = (props) => <Icon {...props}><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></Icon>;
+        const Hash = (props) => <Icon {...props}><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></Icon>;
         const Info = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></Icon>;
         const RotateCcw = (props) => <Icon {...props}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></Icon>;
-        const PenTool = (props) => <Icon {...props}><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></Icon>;
-        const CircleIcon = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/></Icon>;
-        const TriangleIcon = (props) => <Icon {...props}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></Icon>;
-        const Divide = (props) => <Icon {...props}><circle cx="12" cy="6" r="1"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="12" cy="18" r="1"/></Icon>;
+        const BookOpen = (props) => <Icon {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></Icon>;
+        const Grid = (props) => <Icon {...props}><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></Icon>;
 
         // --- DATA & CURRICULUM CONTENT ---
 
         const TOPICS = [
             {
-                id: 'tangents',
-                title: '8-1: Tangent Lines',
-                icon: <PenTool size={20} />,
-                description: 'Lines touching the circle at exactly one point.',
+                id: 'midpoint_distance',
+                title: '7-1: Midpoint & Distance',
+                icon: <MapPin size={20} />,
+                description: 'Finding the middle and length of segments.',
                 theory: (
                 <div className="space-y-4 text-slate-700">
-                    <h3 className="font-bold text-lg text-indigo-700">Key Concepts</h3>
-                    <ul className="list-disc pl-5 space-y-2">
-                    <li>
-                        <strong>Perpendicular Rule:</strong> If a line is tangent to a circle, it forms a <span className="font-bold text-pink-600">90° angle</span> (perpendicular) with the radius at the point of tangency.
-                    </li>
-                    <li>
-                        <strong>Ice Cream Cone Theorem:</strong> If two tangent segments come from the same outside point, they are <span className="font-bold text-pink-600">congruent</span> (equal in length).
-                    </li>
-                    </ul>
-                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200 text-sm">
-                    <p><strong>Tip:</strong> Look for Right Triangles! Since tangents create 90° angles, you can often use the Pythagorean Theorem ($a^2 + b^2 = c^2$) to find missing lengths.</p>
-                    </div>
-                </div>
-                ),
-                questions: [
-                {
-                    id: 1,
-                    question: "Fill in the blank: If a line is tangent to a circle, then the line is ________ to the radius at the point of tangency.",
-                    options: ["parallel", "perpendicular", "congruent", "vertical"],
-                    correctIndex: 1,
-                    explanation: "Imagine a bike wheel on the ground. The spoke (radius) pointing down is perpendicular (90°) to the ground (tangent line)."
-                },
-                {
-                    id: 2,
-                    question: "If two tangent segments to a circle share a common endpoint outside a circle (like an ice cream cone), then the two segments are...",
-                    options: ["congruent", "perpendicular", "parallel", "vertical"],
-                    correctIndex: 0,
-                    explanation: "This is the 'Two-Tangent Theorem'. The segments from the outside point to the circle are equal in length."
-                },
-                {
-                    id: 3,
-                    question: "Refer to the diagram: ML and MN are tangent to circle O. Angle O is 111°. What is the value of x?",
-                    type: "diagram_kite",
-                    angleO: 111,
-                    options: ["41°", "42°", "59°", "69°"],
-                    correctIndex: 3,
-                    explanation: "The angles at L and N are 90° because they are tangents. A quadrilateral adds up to 360°. So, 90 + 90 + 111 + x = 360. Or simpler: x + 111 = 180. x = 69°."
-                },
-                {
-                    id: 4,
-                    question: "A tower is 200 m (0.2 km) high. Earth's radius is 6400 km. About how far is it to the horizon? (Use a² + b² = c²)",
-                    options: ["50.6 km", "400.1 km", "1600 km", "25.3 km"],
-                    correctIndex: 0,
-                    explanation: "Triangle sides: Leg 1 = 6400. Hypotenuse = 6400.2 (Radius + height). Solve: x² + 6400² = 6400.2². x ≈ 50.6 km."
-                }
-                ]
-            },
-            {
-                id: 'chords_angles',
-                title: '8-2 & 8-3: Chords & Inscribed Angles',
-                icon: <CircleIcon size={20} />,
-                description: 'Arcs, chords, and angles inside the circle.',
-                theory: (
-                <div className="space-y-4 text-slate-700">
-                    <h3 className="font-bold text-lg text-indigo-700">The Rules of the Ring</h3>
+                    <h3 className="font-bold text-lg text-indigo-700">The Core Formulas</h3>
                     <div className="grid gap-4">
-                    <div className="bg-white p-3 border rounded shadow-sm">
-                        <h4 className="font-bold text-slate-800">Inscribed Angles</h4>
-                        <p className="text-sm mb-2">An angle with its vertex <em>on</em> the rim of the circle is <strong>half</strong> the measure of the arc it eats.</p>
-                        <div className="bg-slate-100 p-2 rounded text-center font-mono text-sm">Angle = Arc / 2</div>
+                        <div className="bg-white p-3 border rounded shadow-sm">
+                            <h4 className="font-bold text-slate-800">1. Midpoint (The Average)</h4>
+                            <p className="text-sm mb-2">To find the middle, just average the coordinates.</p>
+                            <div className="bg-slate-100 p-2 rounded text-center font-mono text-sm">
+                                M = ( <span className="text-blue-600">x₁+x₂</span> / 2 , <span className="text-green-600">y₁+y₂</span> / 2 )
+                            </div>
+                        </div>
+                        <div className="bg-white p-3 border rounded shadow-sm">
+                            <h4 className="font-bold text-slate-800">2. Distance (Pythagorean)</h4>
+                            <p className="text-sm mb-2">Distance is just the hypotenuse of a right triangle.</p>
+                            <div className="bg-slate-100 p-2 rounded text-center font-mono text-sm">
+                                d = √[ (x₂-x₁)² + (y₂-y₁)² ]
+                            </div>
+                        </div>
                     </div>
-                    <div className="bg-white p-3 border rounded shadow-sm">
-                        <h4 className="font-bold text-slate-800">Inscribed Quadrilaterals</h4>
-                        <p className="text-sm">If a 4-sided shape is inside a circle, <strong>opposite angles add to 180°</strong>.</p>
-                    </div>
-                    <div className="bg-white p-3 border rounded shadow-sm">
-                        <h4 className="font-bold text-slate-800">Chords</h4>
-                        <p className="text-sm">If a radius is perpendicular to a chord, it <strong>bisects</strong> the chord (cuts it in half) and its arc.</p>
-                    </div>
-                    </div>
-                </div>
-                ),
-                questions: [
-                {
-                    id: 10,
-                    question: "An inscribed angle ABC intercepts arc AC. If arc AC is 100°, what is the measure of angle ABC?",
-                    options: ["50°", "100°", "200°", "25°"],
-                    correctIndex: 0,
-                    explanation: "Inscribed Angle Rule: The angle is half the arc. 100 / 2 = 50°."
-                },
-                {
-                    id: 11,
-                    question: "A quadrilateral is inscribed in a circle. Angle A is 80°. What is the measure of the opposite angle C?",
-                    options: ["80°", "100°", "90°", "10°"],
-                    correctIndex: 1,
-                    explanation: "Inscribed Quadrilateral Rule: Opposite angles are supplementary (add to 180). 180 - 80 = 100°."
-                },
-                {
-                    id: 12,
-                    question: "In circle O, a radius is perpendicular to a chord of length 16. What is the length of one of the segments created by the intersection?",
-                    options: ["4", "8", "16", "32"],
-                    correctIndex: 1,
-                    explanation: "Perpendicular Bisector Rule: If the radius hits the chord at 90°, it cuts it in half. 16 / 2 = 8."
-                }
-                ]
-            },
-            {
-                id: 'angle_measures',
-                title: '8-4: Angle Measures',
-                icon: <TriangleIcon size={20} />,
-                description: 'Angles formed by secants and chords inside/outside.',
-                theory: (
-                <div className="space-y-4 text-slate-700">
-                    <h3 className="font-bold text-lg text-indigo-700">Where is the Vertex?</h3>
-                    <ul className="list-disc pl-5 space-y-3">
-                    <li>
-                        <strong>Vertex INSIDE the Circle:</strong> The angle is the <em>average</em> of the two arcs.
-                        <div className="mt-1 font-mono bg-blue-50 p-1 rounded inline-block">Angle = (Arc1 + Arc2) / 2</div>
-                    </li>
-                    <li>
-                        <strong>Vertex OUTSIDE the Circle:</strong> The angle is half the <em>difference</em> of the arcs.
-                        <div className="mt-1 font-mono bg-orange-50 p-1 rounded inline-block">Angle = (Big Arc - Little Arc) / 2</div>
-                    </li>
-                    </ul>
-                    <div className="bg-yellow-50 p-3 rounded border border-yellow-200 text-sm mt-2">
-                    <strong>Memory Aid:</strong> <br/>Inside = Add (+)<br/>Outside = Subtract (-)
+                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200 text-sm">
+                        <p><strong>Tip:</strong> Be careful with negatives! <br/> (4 - -1) becomes (4 + 1).</p>
                     </div>
                 </div>
                 ),
                 questions: [
-                {
-                    id: 15,
-                    question: "Two chords intersect INSIDE a circle. They intercept arcs of 40° and 80°. What is the measure of the angle formed?",
-                    options: ["20°", "40°", "60°", "120°"],
-                    correctIndex: 2,
-                    explanation: "Vertex Inside = Add and Divide by 2. (40 + 80) / 2 = 120 / 2 = 60°."
-                },
-                {
-                    id: 16,
-                    question: "Two secants intersect OUTSIDE a circle. They intercept a big arc of 100° and a small arc of 20°. Find the angle.",
-                    options: ["40°", "60°", "80°", "120°"],
-                    correctIndex: 0,
-                    explanation: "Vertex Outside = Subtract and Divide by 2. (100 - 20) / 2 = 80 / 2 = 40°."
-                }
+                    {
+                        id: 1,
+                        question: "Which formula is the Distance Formula?",
+                        options: [
+                            "(a+b)/2",
+                            "√(x₂-x₁)² + (y₂-y₁)²",
+                            "(x₁+x₂)/2, (y₁+y₂)/2",
+                            "y = mx + b"
+                        ],
+                        correctIndex: 1,
+                        explanation: "The Distance Formula comes from the Pythagorean Theorem (a² + b² = c²). It uses the square root of the differences squared."
+                    },
+                    {
+                        id: 2,
+                        question: "Segment AB has endpoints at -7 and 5 on a number line. What is the coordinate of its midpoint?",
+                        options: ["0", "-1", "1", "2"],
+                        correctIndex: 1,
+                        explanation: "Average them! (-7 + 5) / 2 = -2 / 2 = -1."
+                    },
+                    {
+                        id: 3,
+                        question: "Find the midpoint of segment EF with endpoints E(10, -2) and F(2, -4).",
+                        options: ["(5, 2)", "(6, -3)", "(6, 3)", "(5, -2)"],
+                        correctIndex: 1,
+                        explanation: "Average the x's: (10+2)/2 = 6. Average the y's: (-2 + -4)/2 = -3. Midpoint is (6, -3)."
+                    },
+                    {
+                        id: 4,
+                        question: "What is the distance between U(-1, 9) and V(4, 7)?",
+                        options: ["√25", "√29", "√5", "7"],
+                        correctIndex: 1,
+                        explanation: "Change in x: 4 - (-1) = 5. Change in y: 7 - 9 = -2. Distance = √(5² + (-2)²) = √(25 + 4) = √29."
+                    }
                 ]
             },
             {
-                id: 'segment_lengths',
-                title: '8-4: Segment Lengths',
-                icon: <Divide size={20} />,
-                description: 'Finding missing lengths of chords and secants.',
+                id: 'polygons',
+                title: '7-2: Polygons in Coordinate Plane',
+                icon: <Grid size={20} />,
+                description: 'Classifying shapes using math.',
                 theory: (
                 <div className="space-y-4 text-slate-700">
-                    <h3 className="font-bold text-lg text-indigo-700">Piece × Piece</h3>
-                    <ul className="list-disc pl-5 space-y-4">
-                    <li>
-                        <strong>Intersecting Chords (The X):</strong>
-                        <br />
-                        PieceA × PieceB = PieceC × PieceD
-                    </li>
-                    <li>
-                        <strong>Secants (The V):</strong>
-                        <br />
-                        Whole × Outside = Whole × Outside
-                        <div className="text-xs text-red-500 mt-1 font-bold">CRITICAL: "Whole" means the entire length (outside part + inside part).</div>
-                    </li>
+                    <h3 className="font-bold text-lg text-indigo-700">Proof by Numbers</h3>
+                    <p>We can identify shapes by calculating their side lengths (distance) and corner angles (slopes).</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li><strong>Isosceles Triangle:</strong> Use distance formula. If 2 sides are equal length, it's Isosceles.</li>
+                        <li><strong>Right Triangle:</strong> Check slopes. If two sides are perpendicular (negative reciprocals), it's a Right triangle.</li>
+                        <li><strong>Parallelogram:</strong> Opposite sides must have the same slope (parallel).</li>
                     </ul>
                 </div>
                 ),
                 questions: [
-                {
-                    id: 20,
-                    question: "Two chords intersect in a circle. One chord has segments of lengths 3 and 8. The other has segments x and 4. Find x.",
-                    options: ["5", "6", "12", "24"],
-                    correctIndex: 1,
-                    explanation: "Chord Rule: Part * Part = Part * Part. 3 * 8 = 4 * x. 24 = 4x. x = 6."
-                },
-                {
-                    id: 21,
-                    question: "Two secants meet outside. Secant 1 has an outside part of 4 and an inside part of 6 (Total = 10). Secant 2 has an outside part of 5. Find the total length of Secant 2.",
-                    options: ["8", "12", "10", "4.8"],
-                    correctIndex: 0,
-                    explanation: "Secant Rule: Whole * Outside = Whole * Outside. First secant: 10 * 4 = 40. Second secant: x * 5 = 40. x = 8."
-                }
+                    {
+                        id: 5,
+                        question: "A triangle has vertices A(0,0), B(4,0), and C(2,4). Use distance formula to classify it.",
+                        options: ["Scalene", "Isosceles", "Equilateral", "Right"],
+                        correctIndex: 1,
+                        explanation: "Distance AB = 4. Distance AC = √(2² + 4²) = √20. Distance BC = √(2² + 4²) = √20. Since AC = BC, it is Isosceles."
+                    },
+                    {
+                        id: 6,
+                        question: "Rectangle ABCD has points A(0,0), B(0,3), C(4,3). What must be the coordinates of D?",
+                        options: ["(4, 0)", "(3, 4)", "(4, 4)", "(3, 0)"],
+                        correctIndex: 0,
+                        explanation: "To make a rectangle, D needs to be directly below C (x=4) and directly across from A (y=0). So D is (4,0)."
+                    }
                 ]
             },
             {
-                id: 'equations',
-                title: '8-5: Circles in Coordinate Plane',
-                icon: <Calculator size={20} />,
-                description: 'Graphing circles and writing their equations.',
+                id: 'slopes',
+                title: '7-3: Parallel & Perpendicular',
+                icon: <GitCommit size={20} />,
+                description: 'Slopes of lines that never meet or meet at 90°.',
                 theory: (
                 <div className="space-y-4 text-slate-700">
-                    <h3 className="font-bold text-lg text-indigo-700">The Golden Formula</h3>
-                    <p className="text-xl text-center bg-slate-100 p-3 rounded-lg font-mono">
-                    (x - <span className="text-red-500">h</span>)² + (y - <span className="text-blue-500">k</span>)² = <span className="text-green-600">r</span>²
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white p-3 border rounded shadow-sm">
-                        <h4 className="font-bold text-slate-800">Center (h, k)</h4>
-                        <p className="text-sm">Careful with signs! If the equation says <code className="bg-gray-100 px-1">(x-4)</code>, the x-coordinate is positive 4. If it says <code className="bg-gray-100 px-1">(y+9)</code>, the y-coordinate is negative 9.</p>
-                    </div>
-                    <div className="bg-white p-3 border rounded shadow-sm">
-                        <h4 className="font-bold text-slate-800">Radius (r)</h4>
-                        <p className="text-sm">The equation equals radius <strong>squared</strong>. If the equation equals 25, the radius is 5.</p>
-                    </div>
+                    <h3 className="font-bold text-lg text-indigo-700">Slope Rules</h3>
+                    <div className="grid gap-4">
+                        <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                            <h4 className="font-bold text-blue-800">Parallel Lines ( || )</h4>
+                            <p className="text-sm">They have the <strong>SAME</strong> slope.</p>
+                            <p className="font-mono text-xs mt-1">m₁ = 2, m₂ = 2</p>
+                        </div>
+                        <div className="bg-pink-50 p-3 rounded border border-pink-200">
+                            <h4 className="font-bold text-pink-800">Perpendicular Lines ( ⊥ )</h4>
+                            <p className="text-sm">Slopes are <strong>Negative Reciprocals</strong> (Flip & Switch Sign).</p>
+                            <p className="font-mono text-xs mt-1">m₁ = 2, m₂ = -1/2</p>
+                        </div>
                     </div>
                 </div>
                 ),
                 questions: [
-                {
-                    id: 26,
-                    question: "What is the standard equation for a circle with center (-4, 9) and radius 1?",
-                    options: [
-                    "(x - 4)² + (y + 9)² = 1",
-                    "(x - 4)² + (y - 9)² = 1",
-                    "(x + 4)² + (y + 9)² = 1",
-                    "(x + 4)² + (y - 9)² = 1"
-                    ],
-                    correctIndex: 3,
-                    explanation: "Flip the signs of the center! -4 becomes (x + 4) and positive 9 becomes (y - 9). Radius squared is 1² = 1."
-                },
-                {
-                    id: 27,
-                    question: "Identify the correct equation for a circle with center (-2, 2) and r² = 128.",
-                    options: [
-                    "(x - 2)² + (y - 2)² = 128",
-                    "(x - 2)² + (y + 2)² = 128",
-                    "(x + 2)² + (y + 2)² = 128",
-                    "(x + 2)² + (y - 2)² = 128"
-                    ],
-                    correctIndex: 3,
-                    explanation: "Center x is -2, so we need (x + 2). Center y is 2, so we need (y - 2)."
-                },
-                {
-                    id: 28,
-                    question: "True or False: The point (0, 0) is on the circle (x-3)² + (y-4)² = 25.",
-                    options: ["True", "False"],
-                    correctIndex: 0,
-                    explanation: "Plug in 0 for x and y. (-3)² + (-4)² = 9 + 16 = 25. Since 25 = 25, it is true."
-                }
+                    {
+                        id: 11,
+                        question: "Identify the equation of the line shown in a graph with y-intercept +3 and a slope of -2.",
+                        options: ["y = -3x + 3", "y = -2x + 3", "y = 2x + 4", "y = 3x - 2"],
+                        correctIndex: 1,
+                        explanation: "Slope-intercept form is y = mx + b. m = -2, b = 3. So, y = -2x + 3."
+                    },
+                    {
+                        id: 12,
+                        question: "Fill in the blank: The slopes of parallel lines will be ________.",
+                        options: ["negative reciprocals", "the same", "opposites", "undefined"],
+                        correctIndex: 1,
+                        explanation: "Parallel lines never touch, so they must rise and run at exactly the same rate."
+                    },
+                    {
+                        id: 14,
+                        question: "What is an equation of the line PARALLEL to y = -2x + 4 that contains the point (1, 1)?",
+                        options: ["y = 2x + 4", "y = 3x + 4", "y = 2x - 4", "y = -2x + 3"],
+                        correctIndex: 3,
+                        explanation: "Parallel means same slope, so m = -2. Use point-slope: y - 1 = -2(x - 1). Simplify: y = -2x + 2 + 1 → y = -2x + 3."
+                    },
+                    {
+                        id: 15,
+                        question: "Line A has slope 3. Line B has slope -1/3. Are they perpendicular?",
+                        options: ["Yes", "No"],
+                        correctIndex: 0,
+                        explanation: "Multiply them: 3 * (-1/3) = -1. Since the product is -1 (or they are flipped with opposite signs), they are perpendicular."
+                    }
                 ]
             }
         ];
 
-        // --- SUB-COMPONENTS ---
+        // --- VISUALIZERS ---
 
-        const DiagramKite = ({ angleO, highlight }) => (
-            <svg viewBox="0 0 200 160" className="w-64 h-52 mx-auto my-4 bg-white rounded-lg shadow-inner">
-                {/* Circle */}
-                <circle cx="60" cy="80" r="40" stroke="#4f46e5" strokeWidth="2" fill="none" opacity="0.3" />
-                <circle cx="60" cy="80" r="3" fill="#4f46e5" />
-                <text x="50" y="85" fontSize="12" fill="#4f46e5">O</text>
+        const DistanceVisualizer = ({ highlight }) => (
+            <div className="w-full h-48 bg-white rounded-lg border border-slate-200 relative mb-4 overflow-hidden">
+                <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(#6366f1 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
+                <svg className="w-full h-full" viewBox="0 0 300 150">
+                    {/* Triangle */}
+                    <path d="M50,120 L250,120 L250,20 Z" fill="rgba(99, 102, 241, 0.1)" stroke="none" />
+                    
+                    {/* Run */}
+                    <line x1="50" y1="120" x2="250" y2="120" stroke="#3b82f6" strokeWidth="3" strokeDasharray={highlight ? "5,5" : "0"} />
+                    <text x="150" y="140" fill="#3b82f6" fontSize="12" fontWeight="bold">Run (x₂-x₁)</text>
+                    
+                    {/* Rise */}
+                    <line x1="250" y1="120" x2="250" y2="20" stroke="#ef4444" strokeWidth="3" strokeDasharray={highlight ? "5,5" : "0"} />
+                    <text x="260" y="70" fill="#ef4444" fontSize="12" fontWeight="bold" style={{writingMode: "vertical-rl"}}>Rise (y₂-y₁)</text>
 
-                {/* Tangent Points */}
-                <circle cx="75" cy="43" r="3" fill={highlight ? "#db2777" : "#333"} /> {/* L */}
-                <text x="75" y="35" fontSize="12">L</text>
-                
-                <circle cx="75" cy="117" r="3" fill={highlight ? "#db2777" : "#333"} /> {/* N */}
-                <text x="75" y="135" fontSize="12">N</text>
+                    {/* Hypotenuse */}
+                    <line x1="50" y1="120" x2="250" y2="20" stroke="#10b981" strokeWidth="4" />
+                    <text x="130" y="60" fill="#10b981" fontSize="14" fontWeight="bold">Distance (d)</text>
 
-                {/* Outside Point */}
-                <circle cx="160" cy="80" r="3" fill="#333" /> {/* M */}
-                <text x="170" y="85" fontSize="12">M</text>
-
-                {/* Lines */}
-                <line x1="60" y1="80" x2="75" y2="43" stroke="#4f46e5" strokeWidth="2" /> {/* Radius */}
-                <line x1="60" y1="80" x2="75" y2="117" stroke="#4f46e5" strokeWidth="2" /> {/* Radius */}
-                
-                <line x1="75" y1="43" x2="160" y2="80" stroke="#333" strokeWidth="2" /> {/* Tangent */}
-                <line x1="75" y1="117" x2="160" y2="80" stroke="#333" strokeWidth="2" /> {/* Tangent */}
-
-                {/* Angle O */}
-                <text x="35" y="85" fontSize="12" fontWeight="bold">{angleO}°</text>
-
-                {/* Angle x */}
-                <text x="135" y="85" fontSize="14" fontWeight="bold" fill="#db2777">x°</text>
-            </svg>
+                    {/* Points */}
+                    <circle cx="50" cy="120" r="4" fill="#1e293b" />
+                    <text x="30" y="125" fontSize="12">P₁</text>
+                    <circle cx="250" cy="20" r="4" fill="#1e293b" />
+                    <text x="260" y="20" fontSize="12">P₂</text>
+                </svg>
+            </div>
         );
 
         const ProgressBar = ({ current, total }) => {
@@ -339,7 +244,7 @@
 
         // --- MAIN APP COMPONENT ---
 
-        function Unit8Prep() {
+        function Unit7Prep() {
             const [view, setView] = useState('home'); // home, learn, practice
             const [activeTopicId, setActiveTopicId] = useState(null);
             const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
@@ -351,7 +256,7 @@
 
             const activeTopic = TOPICS.find(t => t.id === activeTopicId);
 
-            // Reset question state when topic changes or question advances
+            // Reset question state
             useEffect(() => {
                 setSelectedAnswer(null);
                 setIsCorrect(null);
@@ -367,7 +272,7 @@
             };
 
             const handleAnswerClick = (index) => {
-                if (selectedAnswer !== null) return; // Prevent multiple guesses
+                if (selectedAnswer !== null) return;
 
                 setSelectedAnswer(index);
                 const correct = index === activeTopic.questions[currentQuestionIdx].correctIndex;
@@ -395,30 +300,30 @@
             const renderHome = () => (
                 <div className="max-w-3xl mx-auto p-6">
                     <div className="text-center mb-10">
-                    <h1 className="text-4xl font-extrabold text-indigo-900 mb-2">Geometry Unit 8 Prep</h1>
-                    <p className="text-slate-600">Circles, Tangents, Angles, and Segments. Let's master the full test.</p>
+                    <h1 className="text-4xl font-extrabold text-indigo-900 mb-2">Geometry Unit 7 Prep</h1>
+                    <p className="text-slate-600">Midpoints, Distance, Polygons & Slopes.</p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid md:grid-cols-3 gap-6">
                     {TOPICS.map((topic) => (
-                        <div key={topic.id} className="bg-white rounded-xl shadow-md border border-slate-100 p-6 hover:shadow-lg transition-shadow">
+                        <div key={topic.id} className="bg-white rounded-xl shadow-md border border-slate-100 p-6 hover:shadow-lg transition-shadow flex flex-col h-full">
                         <div className="flex items-center gap-3 mb-3 text-indigo-600">
                             {topic.icon}
-                            <h2 className="font-bold text-lg">{topic.title}</h2>
+                            <h2 className="font-bold text-lg leading-tight">{topic.title}</h2>
                         </div>
-                        <p className="text-sm text-slate-500 mb-6">{topic.description}</p>
-                        <div className="flex gap-2">
+                        <p className="text-sm text-slate-500 mb-6 flex-grow">{topic.description}</p>
+                        <div className="flex flex-col gap-2">
                             <button 
                             onClick={() => handleTopicSelect(topic.id, 'learn')}
-                            className="flex-1 bg-indigo-50 text-indigo-700 py-2 rounded-lg font-medium hover:bg-indigo-100 transition-colors"
+                            className="w-full bg-indigo-50 text-indigo-700 py-2 rounded-lg font-medium hover:bg-indigo-100 transition-colors"
                             >
-                            Learn First
+                            Learn
                             </button>
                             <button 
                             onClick={() => handleTopicSelect(topic.id, 'practice')}
-                            className="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                            className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
                             >
-                            Quiz Mode
+                            Quiz
                             </button>
                         </div>
                         </div>
@@ -493,8 +398,9 @@
                             {question.question}
                         </h3>
 
-                        {question.type === 'diagram_kite' && (
-                            <DiagramKite angleO={question.angleO} highlight={showExplanation} />
+                        {/* Interactive Visual for Topic 1 */}
+                        {activeTopic.id === 'midpoint_distance' && (
+                            <DistanceVisualizer highlight={showExplanation} />
                         )}
 
                         <div className="space-y-3">
@@ -600,7 +506,7 @@
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<Unit8Prep />);
+        root.render(<Unit7Prep />);
     </script>
 </body>
 </html>
