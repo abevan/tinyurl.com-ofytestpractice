@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoBoost: Right Triangles & Trig</title>
+    <title>StudyMastery: Geometry Unit 2</title>
     
     <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
@@ -16,554 +16,488 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Outfit', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo } = React;
 
         // --- ICONS ---
-        const Icon = ({ children, size = 20, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                {children}
-            </svg>
-        );
+        const Icons = {
+            Book: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+            Brain: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16a6 6 0 1 1 0-12 6 6 0 0 1 0 12Z"/><path d="M12 22a6 6 0 0 0 0-12"/><path d="M2 13.593C2.81 12.593 6.96 9.593 8.828 9.593"/><path d="M22 13.593c-.81-1-4.96-4-6.828-4"/></svg>,
+            Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+            X: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+            ArrowRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+            Trophy: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        };
 
-        const TriangleIcon = (props) => <Icon {...props}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></Icon>;
-        const Ruler = (props) => <Icon {...props}><path d="M2 12h20"/><path d="M5 12v-2"/><path d="M9 12v-4"/><path d="M13 12v-2"/><path d="M17 12v-4"/></Icon>;
-        const Eye = (props) => <Icon {...props}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></Icon>;
-        const CheckCircle = (props) => <Icon {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></Icon>;
-        const XCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></Icon>;
-        const ArrowRight = (props) => <Icon {...props}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></Icon>;
-        const Award = (props) => <Icon {...props}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></Icon>;
-        const Info = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></Icon>;
-        const RotateCcw = (props) => <Icon {...props}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></Icon>;
-        const BookOpen = (props) => <Icon {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></Icon>;
-        const Activity = (props) => <Icon {...props}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></Icon>;
-
-        // --- DATA & CURRICULUM CONTENT ---
-
-        const TOPICS = [
+        // --- CONTENT DATA (CURRICULUM) ---
+        const curriculum = [
             {
-                id: 'pythag_converse',
-                title: '4-1: Pythagorean Theorem & Converse',
-                icon: <TriangleIcon size={20} />,
-                description: 'Is it Right, Acute, or Obtuse?',
-                theory: (
-                <div className="space-y-4 text-slate-700">
-                    <h3 className="font-bold text-lg text-indigo-700">The Rules of the Sides</h3>
-                    <p>You know $a^2 + b^2 = c^2$ means it's a <strong>Right Triangle</strong>. But what if they aren't equal?</p>
-                    
-                    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm space-y-3">
-                        <div className="flex items-center gap-3">
-                            <span className="bg-green-100 text-green-800 font-bold px-2 py-1 rounded text-sm">Right</span>
-                            <span>$c^2 = a^2 + b^2$</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <span className="bg-orange-100 text-orange-800 font-bold px-2 py-1 rounded text-sm">Obtuse</span>
-                            <span>$c^2 > a^2 + b^2$ (Big side stretches it open)</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <span className="bg-blue-100 text-blue-800 font-bold px-2 py-1 rounded text-sm">Acute</span>
-                            <span>$c^2 &lt; a^2 + b^2$ (Small side keeps it closed)</span>
-                        </div>
-                    </div>
-                    <p className="text-sm italic text-slate-500">Note: 'c' is ALWAYS the longest side!</p>
-                </div>
-                ),
-                questions: [
+                id: 'vocab',
+                title: 'Module 1: The Vocabulary of Space',
+                description: 'Master Skew Lines, Parallel Planes, and Transversals.',
+                color: 'blue',
+                theory: [
                     {
-                        id: 1,
-                        question: "A triangle has side lengths 6, 8, and 12. Classify the triangle.",
-                        options: ["Right", "Acute", "Obtuse", "Not a triangle"],
-                        correctIndex: 2,
-                        explanation: "Compare c² to a² + b². Longest side is 12. 12² = 144. Other sides: 6² + 8² = 36 + 64 = 100. Since 144 > 100, the big side stretches the triangle open. It is Obtuse."
+                        title: "Parallel vs. Skew",
+                        content: "Think of lines as roads. Parallel Lines are like train tracks—they are on the same flat surface (coplanar) and never touch. Skew Lines are trickier; imagine a bridge crossing over a river. One road goes North/South, the river goes East/West. They never touch, but they aren't parallel because they are on different levels (non-coplanar).",
+                        keyPoint: "Skew = Non-coplanar, No Intersection. Parallel = Coplanar, No Intersection."
                     },
                     {
-                        id: 2,
-                        question: "A triangle has side lengths 5, 12, and 13. Classify it.",
-                        options: ["Right", "Acute", "Obtuse", "Isosceles"],
-                        correctIndex: 0,
-                        explanation: "Check the squares: 13² = 169. 5² + 12² = 25 + 144 = 169. Since 169 = 169, it is a Right Triangle."
-                    },
-                    {
-                        id: 3,
-                        question: "Which equation represents the Converse of the Pythagorean Theorem for an Acute triangle?",
-                        options: ["c² = a² + b²", "c² > a² + b²", "c² < a² + b²", "a + b < c"],
-                        correctIndex: 2,
-                        explanation: "For an acute triangle, the longest side squared must be SMALLER than the sum of the other squares."
+                        title: "The Transversal",
+                        content: "A Transversal is a line that cuts across two or more other lines. It's the 'slasher' line. When it cuts parallel lines, it creates special angle pairs that have magical properties.",
+                        keyPoint: "Identify the transversal first! It connects the two other lines."
                     }
                 ]
             },
             {
-                id: 'special_right_triangles',
-                title: '4-2: Special Right Triangles',
-                icon: <Ruler size={20} />,
-                description: 'Shortcuts for 45-45-90 and 30-60-90.',
-                theory: (
-                <div className="space-y-4 text-slate-700">
-                    <h3 className="font-bold text-lg text-indigo-700">The "Special" Shortcuts</h3>
-                    <p>If you spot these specific angles, you can ditch the calculator and use these patterns instead!</p>
-                    
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                            <h4 className="font-bold text-purple-900 mb-2">45°-45°-90° (Isosceles)</h4>
-                            <p className="text-sm mb-2">The legs are twins! The hypotenuse is the leg times $\sqrt{2}$.</p>
-                            <ul className="text-sm font-mono bg-white p-2 rounded">
-                                <li>Leg = x</li>
-                                <li>Hypotenuse = x$\sqrt{2}$</li>
-                            </ul>
-                        </div>
-                        <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                            <h4 className="font-bold text-orange-900 mb-2">30°-60°-90°</h4>
-                            <p className="text-sm mb-2">Everything depends on the <strong>Short Leg</strong> (opposite 30°).</p>
-                            <ul className="text-sm font-mono bg-white p-2 rounded">
-                                <li>Short Leg = x</li>
-                                <li>Hypotenuse = 2x</li>
-                                <li>Long Leg = x$\sqrt{3}$</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                ),
-                questions: [
+                id: 'parallel',
+                title: 'Module 2: Parallel Line Laws',
+                description: 'Unlock the secrets of the Z-Rule, F-Rule, and C-Rule.',
+                color: 'indigo',
+                theory: [
                     {
-                        id: 301,
-                        question: "In a 45°-45°-90° triangle, one leg is 7. What is the length of the hypotenuse?",
-                        options: ["7", "14", "7√2", "7√3"],
-                        correctIndex: 2,
-                        explanation: "Rule for 45-45-90: Hypotenuse = Leg * √2. So, 7√2."
+                        title: "The Golden Rules",
+                        content: "When parallel lines are cut by a transversal, patterns emerge:",
+                        bullets: [
+                            "Alternate Interior Angles (The Z Rule): These are EQUAL.",
+                            "Corresponding Angles (The F Rule): These are EQUAL.",
+                            "Same-Side Interior Angles (The C Rule): These add up to 180° (Supplementary).",
+                            "Alternate Exterior Angles: These are EQUAL."
+                        ]
                     },
                     {
-                        id: 302,
-                        question: "In a 30°-60°-90° triangle, the Hypotenuse is 20. What is the length of the SHORT leg?",
-                        options: ["10", "40", "10√3", "20√2"],
-                        correctIndex: 0,
-                        explanation: "Rule for 30-60-90: The Hypotenuse is exactly DOUBLE the short leg. 20 / 2 = 10."
-                    },
-                    {
-                        id: 303,
-                        question: "In a 30°-60°-90° triangle, the Short Leg is 5. What is the length of the LONG leg?",
-                        options: ["10", "5√2", "5√3", "2.5"],
-                        correctIndex: 2,
-                        explanation: "Rule for 30-60-90: Long leg = Short leg * √3. So, 5√3."
+                        title: "Solving Equations",
+                        content: "If the relationship creates Equal angles, set them equal (3x = 60). If they are Supplementary, add them to equal 180 (3x + 60 = 180).",
+                        keyPoint: "Ask yourself: Do they look the same size? If yes, set equal. If one is big and one is small, they add to 180."
                     }
                 ]
             },
             {
-                id: 'trig',
-                title: '4-3: Trigonometry (SOH CAH TOA)',
-                icon: <Activity size={20} />,
-                description: 'Sine, Cosine, and Tangent ratios.',
-                theory: (
-                <div className="space-y-4 text-slate-700">
-                    <h3 className="font-bold text-lg text-indigo-700">SOH - CAH - TOA</h3>
-                    <p>These are just fancy names for fractions comparing sides of a triangle.</p>
-                    <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                        <div className="bg-indigo-50 p-2 rounded border border-indigo-200">
-                            <strong className="block text-indigo-800 mb-1">SOH</strong>
-                            Sin = <span className="italic">Opp / Hyp</span>
-                        </div>
-                        <div className="bg-pink-50 p-2 rounded border border-pink-200">
-                            <strong className="block text-pink-800 mb-1">CAH</strong>
-                            Cos = <span className="italic">Adj / Hyp</span>
-                        </div>
-                        <div className="bg-teal-50 p-2 rounded border border-teal-200">
-                            <strong className="block text-teal-800 mb-1">TOA</strong>
-                            Tan = <span className="italic">Opp / Adj</span>
-                        </div>
-                    </div>
-                </div>
-                ),
-                questions: [
+                id: 'triangles',
+                title: 'Module 3: Triangle Truths',
+                description: 'Triangle Sum and Exterior Angle Theorems.',
+                color: 'emerald',
+                theory: [
                     {
-                        id: 4,
-                        question: "In a right triangle, which ratio represents the Tangent?",
-                        options: ["Opposite / Hypotenuse", "Adjacent / Hypotenuse", "Opposite / Adjacent", "Hypotenuse / Opposite"],
-                        correctIndex: 2,
-                        explanation: "Remember TOA: Tangent = Opposite over Adjacent."
+                        title: "Triangle Sum Theorem",
+                        content: "The three angles inside ANY triangle always add up to exactly 180°. No exceptions.",
+                        keyPoint: "Angle 1 + Angle 2 + Angle 3 = 180°"
                     },
                     {
-                        id: 5,
-                        question: "You are looking for the 'Opposite' leg and you have the 'Hypotenuse'. Which trig function should you use?",
-                        options: ["Sine", "Cosine", "Tangent", "Pythagorean"],
-                        correctIndex: 0,
-                        explanation: "You have Opp and Hyp. That spells SOH. Use Sine."
-                    },
-                    {
-                        id: 6,
-                        question: "Find x if tan(x) = 1. (Hint: When are the legs equal?)",
-                        options: ["30°", "45°", "60°", "90°"],
-                        correctIndex: 1,
-                        explanation: "Tan is Opp/Adj. If the ratio is 1, the legs are the same length. This happens in a 45-45-90 triangle."
-                    }
-                ]
-            },
-            {
-                id: 'elevation_depression',
-                title: '4-4: Elevation & Depression',
-                icon: <Eye size={20} />,
-                description: 'Looking up and looking down.',
-                theory: (
-                <div className="space-y-4 text-slate-700">
-                    <h3 className="font-bold text-lg text-indigo-700">The "Z" Rule</h3>
-                    <p>A common mistake is putting the Angle of Depression in the wrong place!</p>
-                    <ul className="list-disc pl-5 space-y-2">
-                        <li><strong>Angle of Elevation:</strong> Looking UP from the ground.</li>
-                        <li><strong>Angle of Depression:</strong> Looking DOWN from the sky (measured from a horizontal line, NOT the vertical wall).</li>
-                    </ul>
-                    <div className="bg-yellow-50 p-3 rounded border border-yellow-200 text-sm font-bold">
-                        Secret Hack: The Angle of Depression equals the Angle of Elevation. (Alternate Interior Angles).
-                    </div>
-                </div>
-                ),
-                questions: [
-                    {
-                        id: 7,
-                        question: "A bird sits on a wire 50 ft high. It looks down at a worm with an angle of depression of 40°. Which angle inside the triangle is also 40°?",
-                        options: ["The top angle (by the bird)", "The bottom angle (by the worm)", "The right angle", "None of them"],
-                        correctIndex: 1,
-                        explanation: "The Angle of Depression (from the sky horizontal) is congruent to the Angle of Elevation (from the ground). The angle by the worm is 40°."
-                    },
-                    {
-                        id: 8,
-                        question: "A ladder leans against a wall. The foot of the ladder is 10 ft from the wall. The angle of elevation is 60°. Which trig function finds the ladder length?",
-                        options: ["Sin(60) = 10/x", "Cos(60) = 10/x", "Tan(60) = x/10", "Cos(60) = x/10"],
-                        correctIndex: 1,
-                        explanation: "10 is the Adjacent side. The ladder is the Hypotenuse. Adj + Hyp = Cosine. Cos(60) = 10 / x."
+                        title: "Exterior Angle Theorem",
+                        content: "The measure of an exterior angle of a triangle equals the sum of the two remote (far away) interior angles.",
+                        keyPoint: "Exterior = Remote 1 + Remote 2"
                     }
                 ]
             }
         ];
 
-        // --- VISUALIZERS ---
+        // --- QUESTION GENERATOR ENGINE ---
+        const generateQuestion = (moduleId) => {
+            const r = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+            
+            if (moduleId === 'vocab') {
+                const scenarios = [
+                    {
+                        q: "Line AB is on the ceiling running North-South. Line CD is on the floor running East-West. What is their relationship?",
+                        a: "Skew Lines",
+                        o: ["Parallel Lines", "Skew Lines", "Perpendicular Lines", "Intersecting Lines"],
+                        e: "They are on different planes (ceiling vs floor) and are not parallel, so they are Skew."
+                    },
+                    {
+                        q: "Plane X contains lines m and n. Line m and n never intersect. What are they?",
+                        a: "Parallel Lines",
+                        o: ["Skew Lines", "Parallel Lines", "Transversals", "Oblique Lines"],
+                        e: "Since they are on the SAME plane (coplanar) and don't intersect, they are Parallel."
+                    }
+                ];
+                return scenarios[r(0, scenarios.length - 1)];
+            }
 
-        const TriangleVisualizer = ({ highlight }) => {
-            // A visual showing acute vs obtuse
+            if (moduleId === 'parallel') {
+                const types = ['alt-int', 'corresponding', 'same-side-int', 'alt-ext'];
+                const type = types[r(0, 3)];
+                const angleValue = r(50, 130);
+                
+                let qText, ans, explanation, options;
+
+                if (type === 'alt-int') {
+                    qText = `Two parallel lines are cut by a transversal. Angle 3 measures ${angleValue}°. Angle 6 is its Alternate Interior angle. What is the measure of Angle 6?`;
+                    ans = angleValue;
+                    explanation = "Alternate Interior angles are equal (Congruent).";
+                } else if (type === 'corresponding') {
+                    qText = `Angle 2 is ${angleValue}°. Angle 6 is in the Corresponding position. What is the measure of Angle 6 assuming lines are parallel?`;
+                    ans = angleValue;
+                    explanation = "Corresponding angles are equal (Congruent).";
+                } else if (type === 'same-side-int') {
+                    qText = `Angle 4 and Angle 6 are Same-Side Interior angles. If Angle 4 is ${angleValue}°, what is Angle 6?`;
+                    ans = 180 - angleValue;
+                    explanation = `Same-Side Interior angles are Supplementary. 180 - ${angleValue} = ${ans}.`;
+                } else {
+                     qText = `Angle 1 is ${angleValue}°. What is its Alternate Exterior angle (Angle 8)?`;
+                     ans = angleValue;
+                     explanation = "Alternate Exterior angles are equal.";
+                }
+
+                // Generate distractors
+                const wrong1 = 180 - ans;
+                const wrong2 = ans + 10;
+                const wrong3 = Math.abs(ans - 20);
+                options = [ans, wrong1, wrong2, wrong3].sort(() => Math.random() - 0.5);
+
+                return {
+                    q: qText,
+                    a: ans,
+                    o: options,
+                    e: explanation
+                };
+            }
+
+            if (moduleId === 'triangles') {
+                const mode = Math.random() > 0.5 ? 'sum' : 'exterior';
+                
+                if (mode === 'sum') {
+                    const a1 = r(30, 80);
+                    const a2 = r(30, 80);
+                    const missing = 180 - (a1 + a2);
+                    return {
+                        q: `A triangle has angles measuring ${a1}° and ${a2}°. What is the measure of the third angle?`,
+                        a: missing,
+                        o: [missing, 180-a1, a1+a2, 90].sort(() => Math.random() - 0.5),
+                        e: `Angles in a triangle add to 180°. 180 - (${a1} + ${a2}) = ${missing}.`
+                    };
+                } else {
+                    const remote1 = r(30, 70);
+                    const remote2 = r(30, 70);
+                    const exterior = remote1 + remote2;
+                    return {
+                        q: `In a triangle, the two remote interior angles measure ${remote1}° and ${remote2}°. What is the measure of the Exterior Angle?`,
+                        a: exterior,
+                        o: [exterior, 180-exterior, Math.abs(remote1-remote2), 180-remote1].sort(() => Math.random() - 0.5),
+                        e: `The Exterior Angle equals the SUM of the two remote interior angles. ${remote1} + ${remote2} = ${exterior}.`
+                    };
+                }
+            }
+        };
+
+        // --- COMPONENTS ---
+
+        const ParallelVisualizer = () => {
+            const [highlight, setHighlight] = useState('none');
+
             return (
-                <div className="w-full h-48 bg-white rounded-lg border border-slate-200 relative mb-4 overflow-hidden flex items-center justify-center">
-                    <div className="text-center relative w-full h-full">
-                         <svg viewBox="0 0 300 150" className="w-full h-full">
-                            {/* Base */}
-                            <line x1="50" y1="130" x2="200" y2="130" stroke="#334155" strokeWidth="4" />
-                            <text x="125" y="145" fontSize="12" fill="#334155">Side a</text>
+                <div className="bg-white p-4 rounded-xl shadow-inner border border-slate-200 mb-6">
+                    <div className="flex justify-center gap-2 mb-4">
+                        <button onClick={() => setHighlight('alt-int')} className={`text-xs px-2 py-1 rounded ${highlight === 'alt-int' ? 'bg-indigo-600 text-white' : 'bg-slate-200'}`}>Alt. Interior</button>
+                        <button onClick={() => setHighlight('corr')} className={`text-xs px-2 py-1 rounded ${highlight === 'corr' ? 'bg-indigo-600 text-white' : 'bg-slate-200'}`}>Corresponding</button>
+                        <button onClick={() => setHighlight('ss-int')} className={`text-xs px-2 py-1 rounded ${highlight === 'ss-int' ? 'bg-indigo-600 text-white' : 'bg-slate-200'}`}>Same-Side Int</button>
+                    </div>
+                    <div className="relative h-48 w-full">
+                        <svg className="w-full h-full" viewBox="0 0 400 200">
+                            {/* Lines */}
+                            <line x1="50" y1="50" x2="350" y2="50" stroke="#334155" strokeWidth="3" />
+                            <line x1="50" y1="150" x2="350" y2="150" stroke="#334155" strokeWidth="3" />
+                            {/* Transversal */}
+                            <line x1="120" y1="20" x2="280" y2="180" stroke="#ef4444" strokeWidth="3" />
+                            
+                            {/* Angles Circles */}
+                            {/* Top Intersection (approx 150, 50) */}
+                            <circle cx="135" cy="40" r="15" fill={highlight === 'corr' ? '#818cf8' : 'transparent'} opacity="0.5" /> {/* 2 */}
+                            <circle cx="165" cy="60" r="15" fill={highlight === 'alt-int' || highlight === 'ss-int' ? '#818cf8' : 'transparent'} opacity="0.5" /> {/* 4 */}
+                            
+                            {/* Bottom Intersection (approx 250, 150) */}
+                            <circle cx="235" cy="140" r="15" fill={highlight === 'alt-int' ? '#818cf8' : 'transparent'} opacity="0.5" /> {/* 5 */}
+                            <circle cx="265" cy="140" r="15" fill={highlight === 'corr' || highlight === 'ss-int' ? '#818cf8' : 'transparent'} opacity="0.5" /> {/* 6 */}
 
-                            {/* Side b (Fixed) */}
-                            <line x1="50" y1="130" x2="50" y2="50" stroke="#334155" strokeWidth="4" />
-                            <text x="30" y="90" fontSize="12" fill="#334155">Side b</text>
+                            {/* Labels */}
+                            <text x="110" y="40" className="text-xs">1</text>
+                            <text x="140" y="40" className="text-xs">2</text>
+                            <text x="130" y="75" className="text-xs">3</text>
+                            <text x="160" y="75" className="text-xs">4</text>
 
-                            {/* Side c (Hypotenuse - changes color) */}
-                            <line x1="50" y1="50" x2="200" y2="130" stroke={highlight ? "#ef4444" : "#10b981"} strokeWidth="4" strokeDasharray={highlight ? "5,5" : "0"}/>
-                            <text x="130" y="80" fontSize="14" fill={highlight ? "#ef4444" : "#10b981"} fontWeight="bold">Side c</text>
-
-                            {/* Annotation */}
-                            <text x="210" y="50" fontSize="12" fill="#64748b">
-                                If c² = a² + b² → Right
-                            </text>
-                             <text x="210" y="70" fontSize="12" fill="#64748b">
-                                If c² > a² + b² → Obtuse
-                            </text>
+                            <text x="230" y="135" className="text-xs">5</text>
+                            <text x="260" y="135" className="text-xs">6</text>
+                            <text x="250" y="170" className="text-xs">7</text>
+                            <text x="280" y="170" className="text-xs">8</text>
                         </svg>
                     </div>
-                </div>
-            )
-        }
-
-        const ElevationVisualizer = () => (
-             <div className="w-full h-40 bg-sky-50 rounded-lg border border-sky-200 relative mb-4 overflow-hidden">
-                <svg viewBox="0 0 300 150" className="w-full h-full">
-                    {/* Horizontal Top */}
-                    <line x1="50" y1="30" x2="250" y2="30" stroke="#94a3b8" strokeWidth="2" strokeDasharray="5,5" />
-                    <text x="180" y="25" fontSize="10" fill="#64748b">Horizontal (Eye Level)</text>
-
-                    {/* Ground */}
-                    <line x1="50" y1="130" x2="250" y2="130" stroke="#166534" strokeWidth="3" />
-
-                    {/* Transversal (Sight Line) */}
-                    <line x1="50" y1="30" x2="250" y2="130" stroke="#2563eb" strokeWidth="2" />
-
-                    {/* Angles */}
-                    <path d="M80,30 A30,30 0 0,1 75,45" fill="none" stroke="#ef4444" strokeWidth="2" />
-                    <text x="90" y="50" fontSize="10" fill="#ef4444">Depression</text>
-
-                    <path d="M220,130 A30,30 0 0,0 225,115" fill="none" stroke="#16a34a" strokeWidth="2" />
-                    <text x="180" y="120" fontSize="10" fill="#16a34a">Elevation</text>
-
-                    <text x="100" y="90" fontSize="14" fontWeight="bold" fill="#334155">ANGLES ARE EQUAL!</text>
-                </svg>
-             </div>
-        );
-
-        const ProgressBar = ({ current, total }) => {
-            const width = `${(current / total) * 100}%`;
-            return (
-                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden mt-2">
-                    <div className="bg-indigo-600 h-full transition-all duration-500" style={{ width }}></div>
+                    <p className="text-center text-sm text-slate-500 mt-2 italic">
+                        {highlight === 'alt-int' && "Z-Pattern: Opposite sides of the transversal, inside the lines."}
+                        {highlight === 'corr' && "F-Pattern: Same position at each intersection."}
+                        {highlight === 'ss-int' && "C-Pattern: Same side, inside. Adds to 180."}
+                        {highlight === 'none' && "Select a relationship to visualize it."}
+                    </p>
                 </div>
             );
         };
 
+        const CubeVisualizer = () => {
+             return (
+                <div className="bg-white p-4 rounded-xl shadow-inner border border-slate-200 mb-6 flex flex-col items-center">
+                    <svg width="200" height="200" viewBox="0 0 200 200" fill="none" stroke="#334155" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        {/* Front Face */}
+                        <rect x="50" y="50" width="100" height="100" />
+                        {/* Back Face */}
+                        <path d="M100 20 L200 20 L200 120 L150 120" strokeDasharray="4"/>
+                        <path d="M50 50 L100 20" />
+                        <path d="M150 50 L200 20" />
+                        <path d="M150 150 L200 120" />
+                        <path d="M50 150 L100 120" strokeDasharray="4" />
+                        <path d="M100 120 L100 20" strokeDasharray="4" />
+                        
+                        {/* Highlighted Skew Lines */}
+                        <line x1="50" y1="50" x2="150" y2="50" stroke="#ef4444" strokeWidth="4" /> {/* Top Front Horiz */}
+                        <line x1="200" y1="20" x2="200" y2="120" stroke="#3b82f6" strokeWidth="4" /> {/* Back Right Vert */}
+                    </svg>
+                    <p className="text-center text-sm text-slate-500 mt-2">
+                        <span className="text-red-500 font-bold">Red</span> and <span className="text-blue-500 font-bold">Blue</span> are <span className="font-bold">SKEW</span>.
+                        <br/>They are not parallel, but they never touch!
+                    </p>
+                </div>
+             )
+        };
+
         // --- MAIN APP COMPONENT ---
 
-        function TrigPrep() {
-            const [view, setView] = useState('home'); // home, learn, practice
-            const [activeTopicId, setActiveTopicId] = useState(null);
-            const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
-            const [selectedAnswer, setSelectedAnswer] = useState(null);
-            const [isCorrect, setIsCorrect] = useState(null);
-            const [showExplanation, setShowExplanation] = useState(false);
+        function StudyMastery() {
+            const [view, setView] = useState('home'); // home, learn, practice, results
+            const [activeModule, setActiveModule] = useState(null);
+            
+            // Practice State
+            const [currentQuestion, setCurrentQuestion] = useState(null);
             const [score, setScore] = useState(0);
+            const [questionCount, setQuestionCount] = useState(0);
             const [streak, setStreak] = useState(0);
+            const [feedback, setFeedback] = useState(null); // null, 'correct', 'incorrect'
 
-            const activeTopic = TOPICS.find(t => t.id === activeTopicId);
-
-            // Reset question state
-            useEffect(() => {
-                setSelectedAnswer(null);
-                setIsCorrect(null);
-                setShowExplanation(false);
-            }, [currentQuestionIdx, activeTopicId]);
-
-            const handleTopicSelect = (topicId, mode) => {
-                setActiveTopicId(topicId);
-                setCurrentQuestionIdx(0);
-                setScore(0);
-                setStreak(0);
-                setView(mode);
+            const startModule = (mod) => {
+                setActiveModule(mod);
+                setView('learn');
             };
 
-            const handleAnswerClick = (index) => {
-                if (selectedAnswer !== null) return;
+            const startPractice = () => {
+                setScore(0);
+                setQuestionCount(0);
+                setStreak(0);
+                nextQuestion();
+                setView('practice');
+            };
 
-                setSelectedAnswer(index);
-                const correct = index === activeTopic.questions[currentQuestionIdx].correctIndex;
-                setIsCorrect(correct);
-                setShowExplanation(true);
+            const nextQuestion = () => {
+                const q = generateQuestion(activeModule.id);
+                setCurrentQuestion(q);
+                setFeedback(null);
+            };
 
-                if (correct) {
-                    setScore(score + 10 + (streak * 2));
-                    setStreak(streak + 1);
+            const handleAnswer = (selectedOption) => {
+                if (feedback) return; // Prevent double clicking
+
+                const isCorrect = selectedOption == currentQuestion.a;
+                
+                if (isCorrect) {
+                    setScore(s => s + 1);
+                    setStreak(s => s + 1);
+                    setFeedback('correct');
                 } else {
                     setStreak(0);
+                    setFeedback('incorrect');
                 }
             };
 
-            const handleNext = () => {
-                if (currentQuestionIdx < activeTopic.questions.length - 1) {
-                    setCurrentQuestionIdx(currentQuestionIdx + 1);
-                } else {
-                    setView('results');
-                }
-            };
-
-            // --- VIEWS ---
-
+            // Render Functions
             const renderHome = () => (
-                <div className="max-w-3xl mx-auto p-6">
-                    <div className="text-center mb-10">
-                    <h1 className="text-4xl font-extrabold text-indigo-900 mb-2">TrigMastery</h1>
-                    <p className="text-slate-600">Unit 4: Right Triangles, Trigonometry, and Real World Angles.</p>
-                    </div>
+                <div className="max-w-2xl mx-auto p-6 fade-in">
+                    <header className="mb-8 text-center">
+                        <h1 className="text-4xl font-extrabold text-slate-800 mb-2">StudyMastery</h1>
+                        <p className="text-slate-500">Geometry Unit 2: Lines & Angles</p>
+                    </header>
 
-                    <div className="grid md:grid-cols-3 gap-6">
-                    {TOPICS.map((topic) => (
-                        <div key={topic.id} className="bg-white rounded-xl shadow-md border border-slate-100 p-6 hover:shadow-lg transition-shadow flex flex-col h-full">
-                        <div className="flex items-center gap-3 mb-3 text-indigo-600">
-                            {topic.icon}
-                            <h2 className="font-bold text-lg leading-tight">{topic.title}</h2>
-                        </div>
-                        <p className="text-sm text-slate-500 mb-6 flex-grow">{topic.description}</p>
-                        <div className="flex flex-col gap-2">
-                            <button 
-                            onClick={() => handleTopicSelect(topic.id, 'learn')}
-                            className="w-full bg-indigo-50 text-indigo-700 py-2 rounded-lg font-medium hover:bg-indigo-100 transition-colors"
-                            >
-                            Learn
-                            </button>
-                            <button 
-                            onClick={() => handleTopicSelect(topic.id, 'practice')}
-                            className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-                            >
-                            Quiz
-                            </button>
-                        </div>
-                        </div>
-                    ))}
+                    <div className="grid gap-4">
+                        {curriculum.map(mod => (
+                            <div key={mod.id} 
+                                onClick={() => startModule(mod)}
+                                className={`group cursor-pointer p-6 rounded-2xl bg-white border-2 border-transparent hover:border-${mod.color}-500 shadow-sm hover:shadow-md transition-all`}>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h2 className={`text-xl font-bold text-${mod.color}-600 mb-1`}>{mod.title}</h2>
+                                        <p className="text-slate-500 text-sm">{mod.description}</p>
+                                    </div>
+                                    <div className={`text-${mod.color}-500 opacity-0 group-hover:opacity-100 transition-opacity`}>
+                                        <Icons.ArrowRight />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             );
 
             const renderLearn = () => (
-                <div className="max-w-2xl mx-auto p-6">
-                    <button onClick={() => setView('home')} className="flex items-center text-slate-500 hover:text-slate-800 mb-6">
-                    <RotateCcw size={16} className="mr-2" /> Back to Menu
+                <div className="max-w-2xl mx-auto p-6 fade-in">
+                    <button onClick={() => setView('home')} className="text-slate-400 hover:text-slate-600 mb-4 flex items-center gap-2 text-sm">
+                        ← Back to Menu
                     </button>
-
-                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                    <div className="bg-indigo-600 p-6 text-white">
-                        <h2 className="text-2xl font-bold flex items-center gap-3">
-                        <BookOpen size={24} />
-                        {activeTopic.title}
-                        </h2>
-                    </div>
                     
-                    <div className="p-8">
-                        {activeTopic.theory}
+                    <h2 className={`text-3xl font-bold text-${activeModule.color}-600 mb-6`}>{activeModule.title}</h2>
 
-                        <div className="mt-8 flex justify-end">
-                        <button 
-                            onClick={() => setView('practice')}
-                            className="flex items-center bg-green-600 text-white px-6 py-3 rounded-full font-bold hover:bg-green-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all"
-                        >
-                            I'm Ready to Quiz <ArrowRight size={20} className="ml-2" />
-                        </button>
-                        </div>
+                    {/* Visualizer Injection */}
+                    {activeModule.id === 'vocab' && <CubeVisualizer />}
+                    {activeModule.id === 'parallel' && <ParallelVisualizer />}
+
+                    <div className="space-y-6">
+                        {activeModule.theory.map((item, idx) => (
+                            <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                                <h3 className="text-lg font-bold text-slate-800 mb-2">{item.title}</h3>
+                                <p className="text-slate-600 mb-3 leading-relaxed">{item.content}</p>
+                                {item.bullets && (
+                                    <ul className="list-disc pl-5 space-y-1 text-slate-600 mb-3">
+                                        {item.bullets.map((b, i) => <li key={i}>{b}</li>)}
+                                    </ul>
+                                )}
+                                <div className={`bg-${activeModule.color}-50 p-3 rounded-lg border border-${activeModule.color}-100 text-sm font-medium text-${activeModule.color}-800`}>
+                                    💡 Key Rule: {item.keyPoint}
+                                </div>
+                            </div>
+                        ))}
                     </div>
+
+                    <div className="mt-8 sticky bottom-6">
+                        <button 
+                            onClick={startPractice}
+                            className={`w-full bg-${activeModule.color}-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-${activeModule.color}-200 hover:bg-${activeModule.color}-700 transform active:scale-95 transition-all flex items-center justify-center gap-2`}
+                        >
+                            <Icons.Brain /> Start Practice Quiz
+                        </button>
                     </div>
                 </div>
             );
 
-            const renderPractice = () => {
-                const question = activeTopic.questions[currentQuestionIdx];
-
-                return (
-                    <div className="max-w-2xl mx-auto p-4 md:p-6">
-                    {/* Header */}
-                    <div className="flex justify-between items-center mb-6">
-                        <button onClick={() => setView('home')} className="text-slate-400 hover:text-slate-600">
-                        <XCircle size={24} />
-                        </button>
+            const renderPractice = () => (
+                <div className="max-w-xl mx-auto p-6 min-h-screen flex flex-col">
+                    {/* Header Stats */}
+                    <div className="flex justify-between items-center mb-8">
+                        <div className="flex items-center gap-2">
+                            <span className="text-slate-400 text-sm">Q {questionCount + 1}</span>
+                        </div>
                         <div className="flex items-center gap-4">
-                        <div className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">
-                            Streak: {streak} 🔥
+                            <div className="flex items-center gap-1 text-orange-500 font-bold">
+                                <span>🔥</span> {streak}
+                            </div>
+                            <div className="bg-slate-100 px-3 py-1 rounded-full text-sm font-bold text-slate-600">
+                                Score: {score}
+                            </div>
                         </div>
-                        <div className="text-slate-600 font-medium">
-                            Score: {score}
-                        </div>
-                        </div>
-                    </div>
-
-                    {/* Progress */}
-                    <div className="mb-6">
-                        <div className="flex justify-between text-xs text-slate-400 uppercase tracking-wider mb-1">
-                        <span>Question {currentQuestionIdx + 1} of {activeTopic.questions.length}</span>
-                        <span>{activeTopic.title}</span>
-                        </div>
-                        <ProgressBar current={currentQuestionIdx + 1} total={activeTopic.questions.length} />
                     </div>
 
                     {/* Question Card */}
-                    <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden relative">
-                        <div className="p-6 md:p-8">
-                        <h3 className="text-lg md:text-xl font-medium text-slate-800 mb-6 leading-relaxed">
-                            {question.question}
-                        </h3>
-
-                        {/* Visualizers */}
-                        {activeTopic.id === 'pythag_converse' && (
-                            <TriangleVisualizer highlight={showExplanation} />
-                        )}
-                        {activeTopic.id === 'elevation_depression' && (
-                            <ElevationVisualizer />
-                        )}
-
-                        <div className="space-y-3">
-                            {question.options.map((option, idx) => {
-                            let btnClass = "w-full text-left p-4 rounded-xl border-2 transition-all duration-200 flex justify-between items-center group ";
+                    <div className="flex-grow">
+                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-6">
+                            <h3 className="text-xl font-medium text-slate-800 leading-relaxed mb-6">
+                                {currentQuestion.q}
+                            </h3>
                             
-                            if (selectedAnswer === null) {
-                                btnClass += "border-slate-100 hover:border-indigo-300 hover:bg-indigo-50 cursor-pointer";
-                            } else if (idx === question.correctIndex) {
-                                btnClass += "border-green-500 bg-green-50 text-green-800";
-                            } else if (selectedAnswer === idx) {
-                                btnClass += "border-red-400 bg-red-50 text-red-800";
-                            } else {
-                                btnClass += "border-slate-100 opacity-50";
-                            }
+                            <div className="grid grid-cols-1 gap-3">
+                                {currentQuestion.o.map((opt, idx) => (
+                                    <button
+                                        key={idx}
+                                        disabled={feedback !== null}
+                                        onClick={() => handleAnswer(opt)}
+                                        className={`w-full text-left p-4 rounded-xl border-2 transition-all font-medium
+                                            ${feedback === null 
+                                                ? 'border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600' 
+                                                : opt == currentQuestion.a 
+                                                    ? 'border-green-500 bg-green-50 text-green-700'
+                                                    : 'border-slate-100 text-slate-400 opacity-50'
+                                            }
+                                        `}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
-                            return (
-                                <button
-                                key={idx}
-                                onClick={() => handleAnswerClick(idx)}
-                                disabled={selectedAnswer !== null}
-                                className={btnClass}
+                        {/* Feedback & Next */}
+                        {feedback && (
+                            <div className={`p-6 rounded-xl mb-6 fade-in ${feedback === 'correct' ? 'bg-green-100 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                                <div className="flex items-center gap-2 font-bold mb-2">
+                                    {feedback === 'correct' ? <Icons.Check /> : <Icons.X />}
+                                    {feedback === 'correct' ? 'Correct!' : 'Not quite...'}
+                                </div>
+                                <p className="mb-4">{currentQuestion.e}</p>
+                                <button 
+                                    onClick={() => {
+                                        if (questionCount >= 4) {
+                                            setView('results');
+                                        } else {
+                                            setQuestionCount(c => c + 1);
+                                            nextQuestion();
+                                        }
+                                    }}
+                                    className="bg-white px-6 py-2 rounded-lg text-sm font-bold shadow-sm border border-black/10 hover:bg-slate-50"
                                 >
-                                <span className="font-medium">{option}</span>
-                                {selectedAnswer !== null && idx === question.correctIndex && <CheckCircle size={20} className="text-green-600" />}
-                                {selectedAnswer === idx && idx !== question.correctIndex && <XCircle size={20} className="text-red-500" />}
+                                    {questionCount >= 4 ? 'Finish Quiz' : 'Next Question →'}
                                 </button>
-                            );
-                            })}
-                        </div>
-                        </div>
-
-                        {/* Feedback Section */}
-                        {showExplanation && (
-                        <div className={`p-6 border-t ${isCorrect ? 'bg-green-50 border-green-100' : 'bg-orange-50 border-orange-100'}`}>
-                            <div className="flex gap-3 mb-2">
-                            {isCorrect ? (
-                                <div className="p-2 bg-green-100 rounded-full h-fit text-green-600"><CheckCircle size={24} /></div>
-                            ) : (
-                                <div className="p-2 bg-orange-100 rounded-full h-fit text-orange-600"><Info size={24} /></div>
-                            )}
-                            <div>
-                                <h4 className={`font-bold ${isCorrect ? 'text-green-800' : 'text-orange-800'}`}>
-                                {isCorrect ? 'Correct!' : 'Not quite right'}
-                                </h4>
-                                <p className="text-slate-700 text-sm mt-1 leading-relaxed">{question.explanation}</p>
                             </div>
-                            </div>
-                            <div className="flex justify-end mt-4">
-                            <button 
-                                onClick={handleNext}
-                                className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-colors flex items-center"
-                            >
-                                {currentQuestionIdx < activeTopic.questions.length - 1 ? 'Next Question' : 'Finish Quiz'}
-                                <ArrowRight size={18} className="ml-2" />
-                            </button>
-                            </div>
-                        </div>
                         )}
-                    </div>
-                    </div>
-                );
-            };
-
-            const renderResults = () => (
-                <div className="max-w-md mx-auto p-8 text-center mt-10">
-                    <div className="mb-6 inline-block p-6 rounded-full bg-yellow-100 text-yellow-600 shadow-inner">
-                    <Award size={64} />
-                    </div>
-                    <h2 className="text-3xl font-bold text-slate-800 mb-2">Topic Complete!</h2>
-                    <p className="text-slate-500 mb-8">You scored {score} points on {activeTopic.title}.</p>
-                    
-                    <div className="space-y-3">
-                    <button 
-                        onClick={() => {
-                        setCurrentQuestionIdx(0);
-                        setScore(0);
-                        setStreak(0);
-                        setView('practice');
-                        }}
-                        className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors"
-                    >
-                        Try Again
-                    </button>
-                    <button 
-                        onClick={() => setView('home')}
-                        className="w-full bg-white text-slate-600 border border-slate-200 py-3 rounded-xl font-bold hover:bg-slate-50 transition-colors"
-                    >
-                        Choose Different Topic
-                    </button>
                     </div>
                 </div>
             );
+
+            const renderResults = () => {
+                const percentage = (score / 5) * 100;
+                let message = "";
+                if (percentage === 100) message = "Geometry Master! 🏆";
+                else if (percentage >= 80) message = "Great Job! 🌟";
+                else if (percentage >= 60) message = "Good effort! Keep practicing.";
+                else message = "Let's review the theory again.";
+
+                return (
+                    <div className="max-w-md mx-auto p-6 text-center fade-in pt-20">
+                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+                            <div className="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Icons.Trophy />
+                            </div>
+                            <h2 className="text-3xl font-bold text-slate-800 mb-2">{score} / 5</h2>
+                            <p className="text-slate-500 mb-6">{message}</p>
+                            
+                            <div className="space-y-3">
+                                <button 
+                                    onClick={() => {
+                                        setView('learn');
+                                    }}
+                                    className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors"
+                                >
+                                    Review Material
+                                </button>
+                                <button 
+                                    onClick={() => setView('home')}
+                                    className="w-full bg-white text-slate-600 border border-slate-200 py-3 rounded-xl font-bold hover:bg-slate-50 transition-colors"
+                                >
+                                    Try New Topic
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
 
             return (
                 <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
@@ -576,7 +510,7 @@
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<TrigPrep />);
+        root.render(<StudyMastery />);
     </script>
 </body>
 </html>
