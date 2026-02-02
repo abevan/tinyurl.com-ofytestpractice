@@ -3,615 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyMastery: 3D Geometry</title>
+    <title>StudyMastery: Geometry Transformations</title>
     
-    <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Outfit', sans-serif; }
-        
-        /* Custom Animations */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-        .float-anim { animation: float 4s ease-in-out infinite; }
-        
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
-        }
-        .pulse-ring { animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .grid-line { stroke: #e2e8f0; stroke-width: 1; }
+        .axis { stroke: #94a3b8; stroke-width: 2; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-800">
+<body class="bg-slate-50 text-slate-900">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // --- ICONS (Inline SVGs) ---
-        const Icons = {
-            Cube: () => (
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            ),
-            Triangle: () => (
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 20h18L12 4z"/></svg>
-            ),
-            Circle: () => (
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/></svg>
-            ),
-            Check: () => (
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            ),
-            X: () => (
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            ),
-            Trophy: () => (
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-            ),
-            ArrowRight: () => (
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            ),
-            Home: () => (
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            )
-        };
-
-        // --- CURRICULUM DATA ---
-        const curriculum = [
-            {
-                id: 'polyhedra',
-                title: 'Polyhedra & Euler',
-                icon: <Icons.Cube />,
-                description: 'Master Faces, Vertices, and Edges with Euler’s Formula.',
-                theory: `
-                    <h3 class="text-xl font-bold mb-2">What is a Polyhedron?</h3>
-                    <p class="mb-4 text-slate-600">A polyhedron is a 3D solid with flat polygon faces. Think of a die (cube) or a pyramid.</p>
-                    
-                    <h3 class="text-xl font-bold mb-2 text-indigo-600">Euler's Formula</h3>
-                    <p class="mb-4 text-slate-600">For any convex polyhedron, the number of Faces (F), Vertices (V), and Edges (E) are related by this magic rule:</p>
-                    <div class="bg-indigo-50 p-4 rounded-lg text-center font-mono text-xl font-bold text-indigo-800 mb-4 border border-indigo-200">
-                        F + V = E + 2
-                    </div>
-                    <p class="mb-2 font-semibold">Example (A Cube):</p>
-                    <ul class="list-disc pl-5 mb-4 text-slate-600">
-                        <li><strong>Faces (F):</strong> 6 (the flat sides)</li>
-                        <li><strong>Vertices (V):</strong> 8 (the sharp corners)</li>
-                        <li><strong>Edges (E):</strong> 12 (the lines connecting corners)</li>
-                        <li>Check: 6 + 8 = 12 + 2 (14 = 14) ✅</li>
-                    </ul>
-                `,
-                questions: [
-                    {
-                        q: "A polyhedron has 8 faces and 12 vertices. How many edges does it have?",
-                        options: ["18", "20", "22", "16"],
-                        correct: 0,
-                        explanation: "Use Euler's Formula: F + V = E + 2. Plug in the numbers: 8 + 12 = E + 2. This simplifies to 20 = E + 2. Subtract 2 from both sides to get E = 18."
-                    },
-                    {
-                        q: "Which of the following represents Euler's Formula correctly?",
-                        options: ["F + E = V + 2", "F + V = E + 2", "F + V = E + 4", "V + E = F + 2"],
-                        correct: 1,
-                        explanation: "The correct relationship is Faces + Vertices = Edges + 2. It helps to test it on a Cube (6 faces, 8 vertices, 12 edges) to remember!"
-                    },
-                    {
-                        q: "A shape has 10 Faces and 24 Edges. How many Vertices must it have?",
-                        options: ["12", "14", "16", "18"],
-                        correct: 2,
-                        explanation: "Using F + V = E + 2:  10 + V = 24 + 2.  So, 10 + V = 26.  Subtract 10 to find V = 16."
-                    }
-                ]
-            },
-            {
-                id: 'volumes',
-                title: 'Cones & Pyramids',
-                icon: <Icons.Triangle />,
-                description: 'Calculate volume using the "Rule of Thirds".',
-                theory: `
-                    <h3 class="text-xl font-bold mb-2">The "Rule of Thirds"</h3>
-                    <p class="mb-4 text-slate-600">Pointy shapes (Cones and Pyramids) hold exactly <strong>1/3</strong> of the volume of their straight counterparts (Cylinders and Prisms) with the same base and height.</p>
-                    
-                    <h3 class="text-xl font-bold mb-2 text-indigo-600">Volume of a Cone</h3>
-                    <div class="bg-indigo-50 p-4 rounded-lg text-center font-mono text-lg font-bold text-indigo-800 mb-4 border border-indigo-200">
-                        V = (1/3) × π × r² × h
-                    </div>
-                    
-                    <h3 class="text-xl font-bold mb-2 text-indigo-600">Volume of a Pyramid</h3>
-                    <div class="bg-indigo-50 p-4 rounded-lg text-center font-mono text-lg font-bold text-indigo-800 mb-4 border border-indigo-200">
-                        V = (1/3) × B × h
-                    </div>
-                    <p class="text-sm text-slate-500 italic text-center">where B is the area of the base.</p>
-                `,
-                questions: [
-                    {
-                        q: "Calculate the volume of a cone with radius r=3 and height h=10. (Use π)",
-                        options: ["30π", "90π", "10π", "33π"],
-                        correct: 0,
-                        explanation: "Formula: V = (1/3)πr²h.  Plug in: V = (1/3)π(3²)(10).  V = (1/3)π(9)(10).  V = (1/3)π(90) = 30π."
-                    },
-                    {
-                        q: "A square pyramid has a base side length of 4 and a height of 6. What is the volume?",
-                        options: ["32", "96", "16", "24"],
-                        correct: 0,
-                        explanation: "First, find the Base Area (B). Since it's a square: 4 × 4 = 16.  Now use the volume formula: V = (1/3) × B × h.  V = (1/3) × 16 × 6.  V = 16 × 2 = 32."
-                    },
-                    {
-                        q: "If a cylinder has a volume of 300 cm³, what is the volume of a cone with the same base and height?",
-                        options: ["150 cm³", "100 cm³", "900 cm³", "600 cm³"],
-                        correct: 1,
-                        explanation: "Remember the Rule of Thirds! A cone is exactly 1/3 the volume of a matching cylinder. 300 ÷ 3 = 100."
-                    }
-                ]
-            },
-            {
-                id: 'spheres',
-                title: 'Spheres',
-                icon: <Icons.Circle />,
-                description: 'Formulas for Surface Area and Volume of spheres.',
-                theory: `
-                    <h3 class="text-xl font-bold mb-2">Spheres</h3>
-                    <p class="mb-4 text-slate-600">A sphere is the set of all points in space equidistant from a center point. A <strong>Great Circle</strong> is the largest possible circle you can draw on a sphere (like the Equator).</p>
-                    
-                    <h3 class="text-xl font-bold mb-2 text-indigo-600">Surface Area (Peeling the Orange)</h3>
-                    <div class="bg-indigo-50 p-4 rounded-lg text-center font-mono text-lg font-bold text-indigo-800 mb-4 border border-indigo-200">
-                        SA = 4 × π × r²
-                    </div>
-
-                    <h3 class="text-xl font-bold mb-2 text-indigo-600">Volume (Filling the Balloon)</h3>
-                    <div class="bg-indigo-50 p-4 rounded-lg text-center font-mono text-lg font-bold text-indigo-800 mb-4 border border-indigo-200">
-                        V = (4/3) × π × r³
-                    </div>
-                    <p class="text-slate-600 text-sm"><strong>Tip:</strong> Area is units squared (r²), Volume is units cubed (r³).</p>
-                `,
-                questions: [
-                    {
-                        q: "Find the Surface Area of a sphere with radius r = 5. (Leave in terms of π)",
-                        options: ["25π", "50π", "100π", "125π"],
-                        correct: 2,
-                        explanation: "Formula: SA = 4πr².  Plug in: SA = 4π(5²).  SA = 4π(25) = 100π."
-                    },
-                    {
-                        q: "Find the Volume of a sphere with radius r = 3. (Leave in terms of π)",
-                        options: ["36π", "27π", "108π", "9π"],
-                        correct: 0,
-                        explanation: "Formula: V = (4/3)πr³.  Plug in: V = (4/3)π(3³).  V = (4/3)π(27).  (4 × 27) / 3 = 108 / 3 = 36π."
-                    },
-                    {
-                        q: "True or False: A Great Circle passes through the center of the sphere.",
-                        options: ["True", "False"],
-                        correct: 0,
-                        explanation: "True! By definition, a Great Circle (like the equator) is the intersection of the sphere and a plane passing through its center. It is the largest circle possible on the sphere."
-                    }
-                ]
-            }
-        ];
-
-        // --- COMPONENTS ---
-
-        // 1. VISUALIZER: EULER'S CUBE
-        const EulerVisualizer = () => {
-            const [highlight, setHighlight] = useState('none'); // none, faces, vertices, edges
-
-            const getStrokeColor = (type) => highlight === type ? '#4F46E5' : '#94a3b8';
-            const getStrokeWidth = (type) => highlight === type ? 4 : 2;
-            const getFillOpacity = (type) => highlight === type ? 0.3 : 0.05;
-
-            return (
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center">
-                    <div className="mb-4 flex gap-2">
-                        {['Faces', 'Edges', 'Vertices'].map(type => (
-                            <button 
-                                key={type}
-                                onClick={() => setHighlight(type.toLowerCase())}
-                                className={`px-3 py-1 text-sm rounded-full transition-colors ${highlight === type.toLowerCase() ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                            >
-                                Show {type}
-                            </button>
-                        ))}
-                    </div>
-                    
-                    <svg width="200" height="200" viewBox="0 0 200 200" className="transition-all duration-500">
-                        {/* Back Face */}
-                        <rect x="70" y="40" width="80" height="80" 
-                            fill={highlight === 'faces' ? '#6366f1' : 'none'} 
-                            fillOpacity={getFillOpacity('faces')}
-                            stroke={getStrokeColor('edges')} 
-                            strokeWidth={getStrokeWidth('edges')} 
-                            strokeDasharray="4"
-                        />
-                        
-                        {/* Connecting Lines (Back to Front) */}
-                        <line x1="50" y1="60" x2="70" y2="40" stroke={getStrokeColor('edges')} strokeWidth={getStrokeWidth('edges')} />
-                        <line x1="130" y1="60" x2="150" y2="40" stroke={getStrokeColor('edges')} strokeWidth={getStrokeWidth('edges')} />
-                        <line x1="50" y1="140" x2="70" y2="120" stroke={getStrokeColor('edges')} strokeWidth={getStrokeWidth('edges')} />
-                        <line x1="130" y1="140" x2="150" y2="120" stroke={getStrokeColor('edges')} strokeWidth={getStrokeWidth('edges')} />
-
-                        {/* Front Face */}
-                        <rect x="50" y="60" width="80" height="80" 
-                             fill={highlight === 'faces' ? '#6366f1' : 'none'} 
-                             fillOpacity={getFillOpacity('faces')}
-                             stroke={getStrokeColor('edges')} 
-                             strokeWidth={getStrokeWidth('edges')} 
-                        />
-
-                        {/* Vertices (Circles) */}
-                        {highlight === 'vertices' && [
-                            [50,60], [130,60], [50,140], [130,140], // Front
-                            [70,40], [150,40], [70,120], [150,120]  // Back
-                        ].map((pos, i) => (
-                            <circle key={i} cx={pos[0]} cy={pos[1]} r="6" fill="#4F46E5" className="animate-pulse" />
-                        ))}
-                    </svg>
-                    <p className="mt-4 text-center text-sm text-slate-500">
-                        {highlight === 'none' && "Select a part to highlight it on the cube."}
-                        {highlight === 'faces' && "A Cube has 6 Faces (Front, Back, Top, Bottom, Left, Right)."}
-                        {highlight === 'edges' && "A Cube has 12 Edges (The lines connecting corners)."}
-                        {highlight === 'vertices' && "A Cube has 8 Vertices (The sharp corners)."}
-                    </p>
-                </div>
-            );
-        };
-
-        // 2. VISUALIZER: VOLUME CALCULATOR
-        const VolumeVisualizer = () => {
-            const [radius, setRadius] = useState(3);
-            const [height, setHeight] = useState(5);
-
-            const volume = ((1/3) * Math.PI * radius * radius * height).toFixed(1);
-
-            return (
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row items-center gap-8">
-                    <div className="flex-1 space-y-4 w-full">
-                        <div>
-                            <label className="text-xs font-bold text-slate-400 uppercase">Radius (r)</label>
-                            <input 
-                                type="range" min="1" max="6" step="1" 
-                                value={radius} onChange={(e) => setRadius(parseInt(e.target.value))}
-                                className="w-full accent-indigo-600 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
-                            />
-                            <div className="text-right text-indigo-600 font-mono">{radius} units</div>
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-400 uppercase">Height (h)</label>
-                            <input 
-                                type="range" min="2" max="10" step="1" 
-                                value={height} onChange={(e) => setHeight(parseInt(e.target.value))}
-                                className="w-full accent-indigo-600 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
-                            />
-                            <div className="text-right text-indigo-600 font-mono">{height} units</div>
-                        </div>
-                    </div>
-                    
-                    <div className="flex flex-col items-center justify-center w-full md:w-1/2">
-                        {/* Dynamic Cone SVG */}
-                        <svg width="150" height="150" viewBox="0 0 100 100">
-                            {/* Cylinder Outline for reference (Rule of 1/3s) */}
-                            <path d={`M30,${90 - height*8} L30,90`} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4"/>
-                            <path d={`M70,${90 - height*8} L70,90`} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4"/>
-                            <ellipse cx="50" cy={90 - height*8} rx={radius*6} ry={radius*2} fill="none" stroke="#e2e8f0" strokeDasharray="4" />
-
-                            {/* Cone */}
-                            <ellipse cx="50" cy="90" rx={radius*6} ry={radius*2} fill="#e0e7ff" stroke="#4f46e5" strokeWidth="2" />
-                            <path d={`M${50 - radius*6},90 L50,${90 - height*8} L${50 + radius*6},90`} fill="rgba(99, 102, 241, 0.2)" stroke="#4f46e5" strokeWidth="2" />
-                            
-                            {/* Height Line */}
-                            <line x1="50" y1="90" x2="50" y2={90 - height*8} stroke="#ef4444" strokeWidth="2" strokeDasharray="2" />
-                            <text x="52" y={90 - height*4} fontSize="8" fill="#ef4444">h</text>
-                            
-                            {/* Radius Line */}
-                            <line x1="50" y1="90" x2={50 + radius*6} y2="90" stroke="#059669" strokeWidth="2" />
-                            <text x={50 + radius*3} y="88" fontSize="8" fill="#059669">r</text>
-                        </svg>
-
-                        <div className="mt-2 text-center">
-                            <div className="text-xs text-slate-500">Volume = (1/3)πr²h</div>
-                            <div className="text-2xl font-bold text-indigo-700">{volume}</div>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        // 3. VISUALIZER: SPHERE
-        const SphereVisualizer = () => (
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center">
-                <div className="relative w-48 h-48">
-                    {/* Main Sphere Body */}
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-600 shadow-xl opacity-80"></div>
-                    
-                    {/* Shine */}
-                    <div className="absolute top-8 left-8 w-12 h-12 rounded-full bg-white opacity-40 blur-lg"></div>
-                    
-                    {/* Great Circle (Equator) */}
-                    <div className="absolute top-1/2 left-0 w-full h-8 -mt-4 border-2 border-white rounded-[100%] opacity-60 rotate-12 transform"></div>
-                    
-                    {/* Radius Line */}
-                    <div className="absolute top-1/2 left-1/2 w-1/2 h-0.5 bg-white transform -translate-y-1/2 rotate-12 origin-left"></div>
-                    <div className="absolute top-[45%] left-[65%] text-white font-bold text-lg drop-shadow-md">r</div>
-                </div>
-                <p className="mt-4 text-center text-sm text-slate-500">
-                    A <span className="font-bold text-indigo-600">Great Circle</span> is the largest circle that wraps around the sphere (like the Equator). It passes through the center.
-                </p>
-            </div>
+        // --- ICONS ---
+        const Icon = ({ children, size = 20, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {children}
+            </svg>
         );
+        const Move = (props) => <Icon {...props}><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="19 9 22 12 19 15"/><polyline points="15 19 12 22 9 19"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></Icon>;
+        const RefreshCw = (props) => <Icon {...props}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></Icon>;
+        const Layers = (props) => <Icon {...props}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></Icon>;
+        const CheckCircle = (props) => <Icon {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></Icon>;
+        const XCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></Icon>;
+        const ArrowRight = (props) => <Icon {...props}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></Icon>;
+        const Award = (props) => <Icon {...props}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></Icon>;
+        const Home = (props) => <Icon {...props}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon>;
 
-        // --- MAIN APP ---
-        const App = () => {
-            const [view, setView] = useState('home'); // home, learn, practice, results
-            const [activeModuleId, setActiveModuleId] = useState(null);
-            const [currentQIndex, setCurrentQIndex] = useState(0);
-            const [score, setScore] = useState(0);
-            const [streak, setStreak] = useState(0);
-            const [showExplanation, setShowExplanation] = useState(false);
-            const [selectedOption, setSelectedOption] = useState(null);
-            const [isCorrect, setIsCorrect] = useState(null);
+        // --- VISUALIZER COMPONENT ---
+        const GeometryVisualizer = ({ mode }) => {
+            const [params, setParams] = useState({ x: 2, y: 1, dx: 3, dy: 2, angle: 0, reflectAxis: 'none' });
+            
+            // Base Triangle
+            const A = { x: 2, y: 2 };
+            const B = { x: 5, y: 2 };
+            const C = { x: 2, y: 6 };
 
-            const activeModule = useMemo(() => curriculum.find(m => m.id === activeModuleId), [activeModuleId]);
+            // Helper to transform points
+            const transform = (p) => {
+                let newX = p.x;
+                let newY = p.y;
 
-            const handleStartModule = (id) => {
-                setActiveModuleId(id);
-                setView('learn');
-                setCurrentQIndex(0);
-                setScore(0);
-                setStreak(0);
-                setShowExplanation(false);
-                setSelectedOption(null);
-            };
-
-            const handleAnswer = (optionIndex) => {
-                if (showExplanation) return;
-                
-                setSelectedOption(optionIndex);
-                const correct = optionIndex === activeModule.questions[currentQIndex].correct;
-                setIsCorrect(correct);
-                setShowExplanation(true);
-
-                if (correct) {
-                    setScore(s => s + 100 + (streak * 10));
-                    setStreak(s => s + 1);
-                } else {
-                    setStreak(0);
+                if (mode === 'translation') {
+                    newX += params.dx;
+                    newY += params.dy;
+                } else if (mode === 'reflection') {
+                    if (params.reflectAxis === 'x') newY = -newY;
+                    if (params.reflectAxis === 'y') newX = -newX;
+                } else if (mode === 'rotation') {
+                    // Simple 90/180/270 rotation logic
+                    if (params.angle === 90) { let temp = newX; newX = -newY; newY = temp; }
+                    if (params.angle === 180) { newX = -newX; newY = -newY; }
+                    if (params.angle === 270) { let temp = newX; newX = newY; newY = -temp; }
                 }
+                return { x: newX, y: newY };
             };
 
-            const nextQuestion = () => {
-                if (currentQIndex < activeModule.questions.length - 1) {
-                    setCurrentQIndex(prev => prev + 1);
-                    setShowExplanation(false);
-                    setSelectedOption(null);
-                    setIsCorrect(null);
-                } else {
-                    setView('results');
-                }
-            };
+            const A_ = transform(A);
+            const B_ = transform(B);
+            const C_ = transform(C);
 
-            // --- RENDERERS ---
+            // Grid scaling
+            const scale = 20;
+            const origin = 150; // Center of 300x300 svg
 
-            const renderHome = () => (
-                <div className="max-w-4xl mx-auto p-6">
-                    <header className="mb-10 text-center">
-                        <div className="inline-block p-3 bg-indigo-100 rounded-2xl mb-4">
-                            <Icons.Trophy />
-                        </div>
-                        <h1 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">StudyMastery</h1>
-                        <p className="text-slate-500">Select a module to master 3D Geometry</p>
-                    </header>
-                    
-                    <div className="grid md:grid-cols-3 gap-6">
-                        {curriculum.map((module) => (
-                            <button 
-                                key={module.id}
-                                onClick={() => handleStartModule(module.id)}
-                                className="group relative bg-white p-6 rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left border border-slate-100"
-                            >
-                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-150 transition-transform duration-500">
-                                    {module.icon}
-                                </div>
-                                <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                    {module.icon}
-                                </div>
-                                <h3 className="text-lg font-bold text-slate-800 mb-2">{module.title}</h3>
-                                <p className="text-sm text-slate-500 leading-relaxed">{module.description}</p>
-                                <div className="mt-4 flex items-center text-indigo-600 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Start Learning <span className="ml-2"><Icons.ArrowRight /></span>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            );
-
-            const renderLearn = () => (
-                <div className="max-w-3xl mx-auto p-6">
-                    <button onClick={() => setView('home')} className="text-slate-400 hover:text-indigo-600 mb-6 flex items-center gap-2 text-sm font-semibold transition-colors">
-                        <Icons.Home /> Back to Dashboard
-                    </button>
-                    
-                    <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
-                        <div className="bg-indigo-600 p-8 text-white">
-                            <div className="flex items-center gap-3 mb-2 opacity-80">
-                                {activeModule.icon}
-                                <span className="text-sm font-bold tracking-widest uppercase">Theory Module</span>
-                            </div>
-                            <h2 className="text-3xl font-bold">{activeModule.title}</h2>
-                        </div>
-                        
-                        <div className="p-8">
-                            <div className="prose prose-indigo max-w-none mb-8" dangerouslySetInnerHTML={{ __html: activeModule.theory }} />
-                            
-                            <div className="my-8">
-                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Interactive Lab</h3>
-                                {activeModule.id === 'polyhedra' && <EulerVisualizer />}
-                                {activeModule.id === 'volumes' && <VolumeVisualizer />}
-                                {activeModule.id === 'spheres' && <SphereVisualizer />}
-                            </div>
-
-                            <button 
-                                onClick={() => setView('practice')}
-                                className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center justify-center gap-2 float-anim"
-                            >
-                                Start Practice Quiz <Icons.ArrowRight />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-
-            const renderPractice = () => {
-                const question = activeModule.questions[currentQIndex];
-
-                return (
-                    <div className="max-w-2xl mx-auto p-6 min-h-screen flex flex-col justify-center">
-                        <div className="mb-6 flex justify-between items-end">
-                            <div>
-                                <h2 className="text-slate-500 font-medium text-sm mb-1">Question {currentQIndex + 1} of {activeModule.questions.length}</h2>
-                                <div className="h-2 w-32 bg-slate-200 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-indigo-500 transition-all duration-500"
-                                        style={{ width: `${((currentQIndex + 1) / activeModule.questions.length) * 100}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-sm text-slate-400">Current Score</div>
-                                <div className="text-2xl font-bold text-indigo-600">{score}</div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-3xl shadow-xl p-8 border border-slate-100 relative overflow-hidden">
-                            {/* Visual Aid (Small) */}
-                            <div className="absolute top-0 right-0 opacity-5 p-4 transform scale-150 pointer-events-none">
-                                {activeModule.icon}
-                            </div>
-
-                            <h3 className="text-xl font-bold text-slate-800 mb-8 leading-relaxed relative z-10">
-                                {question.q}
-                            </h3>
-
-                            <div className="space-y-3 relative z-10">
-                                {question.options.map((opt, idx) => {
-                                    let btnClass = "w-full p-4 rounded-xl border-2 text-left font-medium transition-all duration-200 flex justify-between items-center ";
-                                    
-                                    if (showExplanation) {
-                                        if (idx === question.correct) btnClass += "border-emerald-500 bg-emerald-50 text-emerald-800";
-                                        else if (idx === selectedOption) btnClass += "border-rose-500 bg-rose-50 text-rose-800";
-                                        else btnClass += "border-slate-100 opacity-50";
-                                    } else {
-                                        btnClass += "border-slate-100 hover:border-indigo-500 hover:bg-indigo-50 text-slate-600";
-                                    }
-
-                                    return (
-                                        <button 
-                                            key={idx}
-                                            disabled={showExplanation}
-                                            onClick={() => handleAnswer(idx)}
-                                            className={btnClass}
-                                        >
-                                            {opt}
-                                            {showExplanation && idx === question.correct && <span className="text-emerald-600"><Icons.Check /></span>}
-                                            {showExplanation && idx === selectedOption && idx !== question.correct && <span className="text-rose-600"><Icons.X /></span>}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Explanation Panel */}
-                            {showExplanation && (
-                                <div className={`mt-8 p-6 rounded-2xl ${isCorrect ? 'bg-emerald-50 border border-emerald-100' : 'bg-rose-50 border border-rose-100'} animate-[fadeIn_0.5s_ease-out]`}>
-                                    <div className="flex items-start gap-3">
-                                        <div className={`p-2 rounded-full ${isCorrect ? 'bg-emerald-200 text-emerald-700' : 'bg-rose-200 text-rose-700'}`}>
-                                            {isCorrect ? <Icons.Check /> : <Icons.X />}
-                                        </div>
-                                        <div>
-                                            <h4 className={`font-bold mb-1 ${isCorrect ? 'text-emerald-800' : 'text-rose-800'}`}>
-                                                {isCorrect ? 'Correct!' : 'Not quite right.'}
-                                            </h4>
-                                            <p className="text-slate-700 text-sm leading-relaxed mb-4">
-                                                {question.explanation}
-                                            </p>
-                                            <button 
-                                                onClick={nextQuestion}
-                                                className={`px-6 py-2 rounded-lg font-bold text-white text-sm transition-transform hover:scale-105 ${isCorrect ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-800 hover:bg-slate-900'}`}
-                                            >
-                                                {currentQIndex < activeModule.questions.length - 1 ? 'Next Question' : 'See Results'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-            };
-
-            const renderResults = () => {
-                const totalQ = activeModule.questions.length;
-                const percentage = Math.round((score / (totalQ * 110)) * 100); // Rough calculation max score
-
-                return (
-                    <div className="max-w-md mx-auto min-h-screen flex flex-col items-center justify-center p-6 text-center">
-                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 w-full pulse-ring">
-                            <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600 mx-auto mb-6">
-                                <Icons.Trophy />
-                            </div>
-                            
-                            <h2 className="text-3xl font-extrabold text-slate-900 mb-2">Module Complete!</h2>
-                            <p className="text-slate-500 mb-8">You've mastered {activeModule.title}</p>
-                            
-                            <div className="grid grid-cols-2 gap-4 mb-8">
-                                <div className="bg-slate-50 p-4 rounded-2xl">
-                                    <div className="text-sm text-slate-400 font-bold uppercase">Final Score</div>
-                                    <div className="text-2xl font-bold text-indigo-600">{score}</div>
-                                </div>
-                                <div className="bg-slate-50 p-4 rounded-2xl">
-                                    <div className="text-sm text-slate-400 font-bold uppercase">Questions</div>
-                                    <div className="text-2xl font-bold text-indigo-600">{totalQ}</div>
-                                </div>
-                            </div>
-
-                            <button 
-                                onClick={() => setView('home')}
-                                className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors"
-                            >
-                                Back to Dashboard
-                            </button>
-                        </div>
-                    </div>
-                );
-            };
+            const toSvg = (p) => ({ x: origin + p.x * scale, y: origin - p.y * scale });
 
             return (
-                <div className="min-h-screen bg-slate-50">
-                    {view === 'home' && renderHome()}
-                    {view === 'learn' && renderLearn()}
-                    {view === 'practice' && renderPractice()}
-                    {view === 'results' && renderResults()}
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+                    <div className="w-full flex justify-between mb-4">
+                        <span className="font-bold text-slate-600 text-sm uppercase tracking-wider">Geometry Lab</span>
+                        <div className="text-xs text-slate-400">Interact to explore</div>
+                    </div>
+                    
+                    <svg width="300" height="300" className="bg-slate-50 rounded border border-slate-200 mb-4 cursor-crosshair">
+                        {/* Grid Lines */}
+                        {[...Array(15)].map((_, i) => (
+                            <line key={`v${i}`} x1={i*20} y1="0" x2={i*20} y2="300" className="grid-line" />
+                        ))}
+                        {[...Array(15)].map((_, i) => (
+                            <line key={`h${i}`} x1="0" y1={i*20} x2="300" y2={i*20} className="grid-line" />
+                        ))}
+                        {/* Axes */}
+                        <line x1="150" y1="0" x2="150" y2="300" className="axis" />
+                        <line x1="0" y1="150" x2="300" y2="150" className="axis" />
+
+                        {/* Pre-Image (Blue) */}
+                        <polygon 
+                            points={`${toSvg(A).x},${toSvg(A).y} ${toSvg(B).x},${toSvg(B).y} ${toSvg(C).x},${toSvg(C).y}`} 
+                            fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" strokeWidth="2" 
+                        />
+                        <text x={toSvg(A).x-10} y={toSvg(A).y+15} className="text-[10px] fill-blue-600 font-bold">A</text>
+
+                        {/* Image (Purple) */}
+                        <polygon 
+                            points={`${toSvg(A_).x},${toSvg(A_).y} ${toSvg(B_).x},${toSvg(B_).y} ${toSvg(C_).x},${toSvg(C_).y}`} 
+                            fill="rgba(147, 51, 234, 0.2)" stroke="#9333ea" strokeWidth="2" strokeDasharray="4"
+                        />
+                        <text x={toSvg(A_).x-10} y={toSvg(A_).y+15} className="text-[10px] fill-purple-600 font-bold">A'</text>
+                    </svg>
+
+                    {/* Controls */}
+                    <div className="w-full space-y-3 bg-slate-50 p-3 rounded-lg">
+                        {mode === 'translation' && (
+                            <>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold w-8">X: {params.dx}</span>
+                                    <input type="range" min="-8" max="8" value={params.dx} onChange={(e) => setParams({...params, dx: parseInt(e.target.value)})} className="w-full accent-indigo-600"/>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold w-8">Y: {params.dy}</span>
+                                    <input type="range" min="-8" max="8" value={params.dy} onChange={(e) => setParams({...params, dy: parseInt(e.target.value)})} className="w-full accent-indigo-600"/>
+                                </div>
+                                <p className="text-xs text-center text-slate-500 mt-1">Translation Vector &lt;{params.dx}, {params.dy}&gt;</p>
+                            </>
+                        )}
+                        {mode === 'reflection' && (
+                            <div className="flex justify-center gap-2">
+                                <button onClick={() => setParams({...params, reflectAxis: 'x'})} className={`px-4 py-2 rounded text-sm font-bold ${params.reflectAxis === 'x' ? 'bg-indigo-600 text-white' : 'bg-white border'}`}>X-Axis</button>
+                                <button onClick={() => setParams({...params, reflectAxis: 'y'})} className={`px-4 py-2 rounded text-sm font-bold ${params.reflectAxis === 'y' ? 'bg-indigo-600 text-white' : 'bg-white border'}`}>Y-Axis</button>
+                            </div>
+                        )}
+                        {mode === 'rotation' && (
+                            <div className="flex justify-center gap-2">
+                                <button onClick={() => setParams({...params, angle: 90})} className={`px-3 py-2 rounded text-sm font-bold ${params.angle === 90 ? 'bg-indigo-600 text-white' : 'bg-white border'}`}>90°</button>
+                                <button onClick={() => setParams({...params, angle: 180})} className={`px-3 py-2 rounded text-sm font-bold ${params.angle === 180 ? 'bg-indigo-600 text-white' : 'bg-white border'}`}>180°</button>
+                                <button onClick={() => setParams({...params, angle: 270})} className={`px-3 py-2 rounded text-sm font-bold ${params.angle === 270 ? 'bg-indigo-600 text-white' : 'bg-white border'}`}>270°</button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+        // --- DATA & CURRICULUM ---
+        const TOPICS = [
+            {
+                id: 'translations',
+                title: 'Translations & Rigid Motion',
+                icon: <Move size={20} />,
+                description: 'Moving shapes without changing size or shape.',
+                visualizerMode: 'translation',
+                theory: (
+                    <div className="space-y-4 text-slate-700">
+                        <div className="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded">
+                            <h3 className="font-bold text-indigo-900">What is a Rigid Motion?</h3>
+                            <p className="text-sm">A transformation that preserves both <strong>distance</strong> (side lengths) and <strong>angle measure</strong>. Translations, reflections, and rotations are all rigid motions.</p>
+                        </div>
+                        
+                        <h4 className="font-bold text-lg mt-4">Translation Rules</h4>
+                        <p className="text-sm">A translation slides a figure. We can write this as a vector <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-pink-600">&lt;a, b&gt;</code> or a coordinate rule:</p>
+                        
+                        <div className="bg-white p-3 border rounded text-center font-mono text-sm shadow-sm">
+                            (x, y) → (x + a, y + b)
+                        </div>
+                        
+                        <ul className="list-disc list-inside text-sm space-y-1 ml-2">
+                            <li><strong>a</strong> moves it left (-) or right (+).</li>
+                            <li><strong>b</strong> moves it down (-) or up (+).</li>
+                        </ul>
+                    </div>
+                ),
+                questions: [
+                    {
+                        id: 1,
+                        question: "If a triangle is translated by vector <-3, 4>, what happens to its position?",
+                        options: [
+                            "Right 3, Up 4",
+                            "Left 3, Up 4",
+                            "Left 3, Down 4",
+                            "Right 3, Down 4"
+                        ],
+                        correctIndex: 1,
